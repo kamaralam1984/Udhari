@@ -33,7 +33,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         {/* Apply the saved theme before first paint (see ThemeSwitcher) so there is no flash of the wrong theme. */}
         <script
           dangerouslySetInnerHTML={{
-            __html: "try{var t=localStorage.getItem('theme');if(t==='neon'||t==='light')document.documentElement.dataset.theme=t}catch(e){}",
+            __html:
+              "try{var t=localStorage.getItem('theme');if(t!=='light'&&t!=='dark')t=window.matchMedia&&window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';if(t==='light')document.documentElement.dataset.theme='light'}catch(e){}",
           }}
         />
       </head>

@@ -35,7 +35,9 @@ Sign in at `/login` with the seeded owner account (`SEED_OWNER_EMAIL` / `SEED_OW
 - **Roles**: STAFF never receive money data from the analytics API (no collections, outstanding, ROI or other staff's rows) — enforced server-side in `src/app/api/analytics/`.
 - **Alerts + daily report**: the 15-minute scheduler raises owner notifications (dashboard bell + WhatsApp channel) for a low call success rate, too many broken promises or a daily cost limit (each at most once per 6 h), and sends one end-of-day summary after `dailyReportHour`. Thresholds live in Settings → "Alerts & Daily Report"; `0` switches a rule off.
 - **Best time to call (scheduler)**: Settings → Follow-up Automation → "Best time to call" (off by default). When on, an AI follow-up call that is due is held back while the current hour's pick-up rate is clearly below average (last 60 days of calls in the current mode), and placed in the next better hour outside quiet hours. It calls immediately with < 30 calls of history, and never waits longer than the configured max (default 24 h). Held calls stay `PENDING`, no attempt is consumed; the tick log shows `deferred(best time)`. Logic: `src/lib/followUp/bestTime.ts`.
-- **Themes**: Classic / Neon / Light toggle in the header (per browser).
+- **Dark / Light mode**: toggle in the header. The first visit follows the OS setting; after that your choice is remembered (per browser) and applied before first paint. Every page, including `/analytics`, has a real light variant (see the `--*` tokens and `html[data-theme="light"]` in `src/app/globals.css`). All text is checked against WCAG AA contrast in both modes.
+- **Notifications**: the bell in the header shows unread dashboard notifications (⚠ alerts are highlighted, daily report included). Click outside or press Esc to close, "Mark all read" clears everything (`PATCH /api/notifications` with `{ id }` or `{ all: true }`).
+- **Accessibility / motion**: one visible keyboard focus ring everywhere, readable placeholders, 24 px minimum target for toggles, and `prefers-reduced-motion` switches off every animation (CSS and the SVG map).
 
 ## Real calls (Twilio + Bhashini)
 

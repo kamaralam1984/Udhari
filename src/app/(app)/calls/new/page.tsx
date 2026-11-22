@@ -74,7 +74,7 @@ export default function NewCallPage() {
               <option value="other">Other</option>
             </Select>
           </div>
-          {error && <div className="text-xs text-red-300 mt-3">{error}</div>}
+          {error && <div className="text-xs text-[var(--danger-text)] mt-3">{error}</div>}
           <button className="btn-primary flex items-center gap-2 text-sm mt-4" disabled={!phoneNumber.trim() || calling} onClick={placeCall}>
             <PhoneCall size={16} /> {calling ? "Calling…" : "Call"}
           </button>

@@ -158,7 +158,7 @@ export default function CustomersPage() {
                 <option value="other">Other</option>
               </Select>
             </div>
-            {error && <div className="text-xs text-red-300 mt-3">{error}</div>}
+            {error && <div className="text-xs text-[var(--danger-text)] mt-3">{error}</div>}
             <div className="flex gap-2 mt-4">
               <button className="btn-primary text-sm" disabled={saving} onClick={createCustomer}>
                 {saving ? "Saving…" : "Save"}

@@ -71,7 +71,7 @@ export default function UsagePage() {
                   <span className="font-medium">{p.provider}</span>
                   <span>{formatInrClient(p.estimatedCost)}</span>
                 </div>
-                <div className="h-2 rounded-full bg-white/5 overflow-hidden">
+                <div className="h-2 rounded-full bg-[var(--overlay-2)] overflow-hidden">
                   <div
                     className="h-full rounded-full"
                     style={{

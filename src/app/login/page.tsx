@@ -91,7 +91,7 @@ function LoginForm() {
                   placeholder="••••••••"
                 />
               </div>
-              {error && <div className="text-xs text-red-300 bg-red-500/10 border border-red-500/30 rounded-lg p-2">{error}</div>}
+              {error && <div className="text-xs text-[var(--danger-text)] bg-red-500/10 border border-red-500/30 rounded-lg p-2">{error}</div>}
               <button type="submit" disabled={loading} className="btn-primary w-full">
                 {loading ? "Signing in…" : "Sign in"}
               </button>

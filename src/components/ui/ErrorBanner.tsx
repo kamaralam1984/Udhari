@@ -7,7 +7,7 @@ import { AlertTriangle, RefreshCw } from "lucide-react";
  */
 export function ErrorBanner({ message, onRetry }: { message: string; onRetry?: () => void }) {
   return (
-    <div className="flex items-center justify-between gap-3 rounded-lg border border-[color:var(--red)]/40 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+    <div className="flex items-center justify-between gap-3 rounded-lg border border-[color:var(--red)]/40 bg-red-500/10 px-4 py-3 text-sm text-[var(--danger-text)]">
       <span className="flex items-center gap-2">
         <AlertTriangle size={15} className="shrink-0" />
         {message}
@@ -15,7 +15,7 @@ export function ErrorBanner({ message, onRetry }: { message: string; onRetry?: (
       {onRetry && (
         <button
           onClick={onRetry}
-          className="flex items-center gap-1 text-xs font-medium text-red-200 hover:text-red-100 shrink-0"
+          className="flex items-center gap-1 text-xs font-medium text-[var(--danger-text)] hover:text-[var(--danger-text)] shrink-0"
           aria-label="Retry loading"
         >
           <RefreshCw size={13} /> Retry

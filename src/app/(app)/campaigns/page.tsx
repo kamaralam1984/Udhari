@@ -121,7 +121,7 @@ export default function CampaignsPage() {
                     </div>
                     <Badge value={c.status} tone={TONE[c.status]} />
                   </div>
-                  <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-white/10">
+                  <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-[var(--overlay-3)]">
                     <div className="h-full rounded-full bg-[color:var(--gold-bright)]" style={{ width: `${c.stats.progress}%` }} />
                   </div>
                   <div className="mt-2 grid grid-cols-4 gap-2 text-center text-xs">
@@ -239,7 +239,7 @@ function NewCampaignForm({ onDone }: { onDone: () => void | Promise<void> }) {
             <input className="field-input mb-2" placeholder="Naam ya phone se dhundo…" value={q} onChange={(e) => setQ(e.target.value)} />
             <div className="max-h-56 space-y-1 overflow-y-auto rounded-lg border border-[var(--panel-border)] p-2">
               {customers.map((c) => (
-                <label key={c.id} className="flex items-center gap-2 rounded px-1 py-1 text-sm hover:bg-white/5">
+                <label key={c.id} className="flex items-center gap-2 rounded px-1 py-1 text-sm hover:bg-[var(--overlay-2)]">
                   <input
                     type="checkbox"
                     checked={picked.has(c.id)}

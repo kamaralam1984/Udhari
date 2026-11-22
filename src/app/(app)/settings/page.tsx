@@ -256,7 +256,7 @@ export default function SettingsPage() {
               PRODUCTION mode is active. Real telephony calls require a configured (non-mock) TELEPHONY_PROVIDER.
             </div>
           )}
-          {error && <div className="text-xs text-red-300 mt-3">{error}</div>}
+          {error && <div className="text-xs text-[var(--danger-text)] mt-3">{error}</div>}
         </PanelBody>
       </Panel>
 

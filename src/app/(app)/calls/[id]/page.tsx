@@ -256,14 +256,14 @@ export default function CallDetailPage({ params }: { params: Promise<{ id: strin
                           ? "bg-[color:var(--gold)]/15 text-[color:var(--gold-bright)]"
                           : t.speaker === "CUSTOMER"
                             ? "bg-[color:var(--green)]/15 text-[color:var(--green-bright)]"
-                            : "bg-white/5 text-[var(--text-faint)]"
+                            : "bg-[var(--overlay-2)] text-[var(--text-faint)]"
                       }`}
                     >
                       {t.speaker === "AI" ? <Bot size={14} /> : t.speaker === "CUSTOMER" ? <User size={14} /> : <Terminal size={12} />}
                     </div>
                     <div
                       className={`rounded-xl px-3 py-2 text-sm max-w-[80%] ${
-                        t.speaker === "CUSTOMER" ? "bg-[color:var(--green)]/10 border border-[color:var(--green)]/20" : "bg-white/[0.04] border border-[var(--panel-border)]"
+                        t.speaker === "CUSTOMER" ? "bg-[color:var(--green)]/10 border border-[color:var(--green)]/20" : "bg-[var(--overlay-2)] border border-[var(--panel-border)]"
                       }`}
                     >
                       {t.text}
@@ -334,7 +334,7 @@ export default function CallDetailPage({ params }: { params: Promise<{ id: strin
               ) : (
                 <div className="mt-4 text-xs text-[var(--text-faint)]">Call complete ho chuki hai.</div>
               )}
-              {error && <div className="text-xs text-red-300 mt-2">{error}</div>}
+              {error && <div className="text-xs text-[var(--danger-text)] mt-2">{error}</div>}
             </PanelBody>
           </Panel>
 
@@ -344,7 +344,7 @@ export default function CallDetailPage({ params }: { params: Promise<{ id: strin
                 <PanelHeading title="AI Summary" />
                 <p className="text-sm text-[var(--text-dim)] mb-4">{call.callSummary.summaryText}</p>
                 <PanelHeading title="Owner Notification Preview" />
-                <pre className="whitespace-pre-wrap text-xs bg-black/30 border border-[var(--panel-border)] rounded-lg p-3 font-sans text-[var(--text-dim)]">
+                <pre className="whitespace-pre-wrap text-xs bg-[var(--overlay-2)] border border-[var(--panel-border)] rounded-lg p-3 font-sans text-[var(--text-dim)]">
                   {call.callSummary.ownerNotificationText}
                 </pre>
               </PanelBody>

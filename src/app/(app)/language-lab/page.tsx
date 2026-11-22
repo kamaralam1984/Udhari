@@ -373,10 +373,10 @@ export default function LanguageLabPage() {
                 <Upload size={14} /> {uploadingAudio ? "Processing…" : "Transcribe & Extract"}
               </button>
             </div>
-            {micError && <div className="text-xs text-red-300 mt-2">{micError}</div>}
-            {audioError && <div className="text-xs text-red-300 mt-2">{audioError}</div>}
+            {micError && <div className="text-xs text-[var(--danger-text)] mt-2">{micError}</div>}
+            {audioError && <div className="text-xs text-[var(--danger-text)] mt-2">{audioError}</div>}
             {transcription && (
-              <div className="mt-3 flex items-start gap-3 text-xs border border-[var(--panel-border)] rounded-lg p-2.5 bg-white/[0.02]">
+              <div className="mt-3 flex items-start gap-3 text-xs border border-[var(--panel-border)] rounded-lg p-2.5 bg-[var(--overlay-1)]">
                 <RoundProgress value={Math.round(transcription.confidence * 100)} size={44} />
                 <div>
                   <span className="text-[var(--text-dim)]">STT Transcript — AI ne itna sunaai diya: </span>
@@ -411,7 +411,7 @@ export default function LanguageLabPage() {
                 </div>
               )}
             </div>
-            {pdfError && <div className="text-xs text-red-300 mt-2">{pdfError}</div>}
+            {pdfError && <div className="text-xs text-[var(--danger-text)] mt-2">{pdfError}</div>}
             {pdfResult && (
               <div className="mt-3 text-xs border border-[var(--green)]/30 bg-[color:var(--green)]/10 rounded-lg p-2.5">
                 {pdfResult.imported} sentences import hui ({pdfResult.totalLinesFound} lines mile PDF me) — Test History me neeche dekhein.
@@ -426,7 +426,7 @@ export default function LanguageLabPage() {
               <Info label="Extracted Date" value={preview.date.date ? formatDateClient(preview.date.date) : "-"} extra={preview.date.ambiguous ? "ambiguous" : undefined} />
               <Info label="Intent" value={<Badge value={preview.intent.intent} />} />
               <Info label="Overall Confidence" value={`${Math.round(preview.overallConfidence * 100)}%`} />
-              <div className="sm:col-span-2 border border-[var(--panel-border)] rounded-lg p-3 bg-white/[0.02]">
+              <div className="sm:col-span-2 border border-[var(--panel-border)] rounded-lg p-3 bg-[var(--overlay-1)]">
                 <div className="text-xs text-[var(--text-dim)] mb-1">AI Interpretation</div>
                 <div className="text-sm">{preview.aiInterpretation}</div>
               </div>
@@ -457,7 +457,7 @@ export default function LanguageLabPage() {
                   Needs Review
                 </button>
               </div>
-              {verdictError && <div className="sm:col-span-2 text-xs text-red-300">{verdictError}</div>}
+              {verdictError && <div className="sm:col-span-2 text-xs text-[var(--danger-text)]">{verdictError}</div>}
             </div>
           )}
         </PanelBody>
@@ -515,7 +515,7 @@ export default function LanguageLabPage() {
 
 function Info({ label, value, extra }: { label: string; value: React.ReactNode; extra?: string }) {
   return (
-    <div className="border border-[var(--panel-border)] rounded-lg p-3 bg-white/[0.02]">
+    <div className="border border-[var(--panel-border)] rounded-lg p-3 bg-[var(--overlay-1)]">
       <div className="text-xs text-[var(--text-dim)]">{label}</div>
       <div className="text-sm font-medium mt-0.5">{value}</div>
       {extra && <div className="text-[10px] text-[color:var(--gold-bright)] mt-0.5">{extra}</div>}

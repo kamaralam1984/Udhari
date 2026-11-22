@@ -13,7 +13,7 @@
   --panel-border: #1c2531;
   --text: #e7ecf3;
   --text-dim: #8b96a8;
-  --text-faint: #5a6474;
+  --text-faint: #8a95a8;
   --gold: #d9a534;
   --gold-bright: #f5c453;
   --green: #22c55e;
@@ -23,53 +23,66 @@
   --red: #ef4444;
   --blue: #3b82f6;
   --radius: 14px;
+
+  /* Surface overlays + status colors that must flip with the theme */
+  --overlay-1: var(--overlay-1);
+  --overlay-2: var(--overlay-2);
+  --overlay-3: var(--overlay-3);
+  --on-gold: #241a04;
+  --danger-text: #fca5a5;
+  --danger-bg: rgba(239, 68, 68, 0.12);
+  --danger-border: rgba(239, 68, 68, 0.4);
+  --scroll-thumb: #232d3b;
+  --scroll-thumb-hover: #2d3a4a;
+  --chart-axis: rgba(196, 181, 253, 0.7);
+  --chart-grid: rgba(167, 139, 250, 0.14);
+  --chart-text: #ddd6fe;
+  color-scheme: dark;
 }
 
-/* Theme overrides — "classic" is the :root default above; ThemeSwitcher sets html[data-theme]. */
-html[data-theme="neon"] {
-  --bg: #0b0720;
-  --bg-elevated: #140b30;
-  --panel: #1a0f3d;
-  --panel-border: #33206b;
-  --text: #ede9fe;
-  --text-dim: #a99be0;
-  --text-faint: #7c6db5;
-  --gold: #8b5cf6;
-  --gold-bright: #c4b5fd;
-}
-html[data-theme="neon"] body {
-  background-image:
-    radial-gradient(ellipse 80% 50% at 20% -10%, rgba(124, 58, 237, 0.32), transparent),
-    radial-gradient(ellipse 60% 40% at 100% 100%, rgba(192, 38, 211, 0.2), transparent),
-    linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
-}
 html[data-theme="light"] {
   --bg: #f4f5f9;
   --bg-elevated: #ffffff;
   --panel: #ffffff;
-  --panel-border: #dfe3ec;
+  --panel-border: #d9deea;
   --text: #111827;
-  --text-dim: #4b5563;
-  --text-faint: #6b7280;
-  --gold: #b7791f;
-  --gold-bright: #92610a;
+  --text-dim: #475569;
+  --text-faint: #5b6577;
+  --gold: #a16207;
+  --gold-bright: #854d0e;
   --green: #15803d;
-  --green-bright: #15803d;
+  --green-bright: #166534;
   --yellow: #a16207;
   --yellow-bright: #854d0e;
   --red: #dc2626;
-}
-html[data-theme="light"] {
-  --chart-axis: rgba(55, 65, 81, 0.75);
+  --overlay-1: rgba(15, 23, 42, 0.025);
+  --overlay-2: rgba(15, 23, 42, 0.05);
+  --overlay-3: rgba(15, 23, 42, 0.1);
+  --on-gold: #ffffff;
+  --danger-text: #b91c1c;
+  --danger-bg: rgba(220, 38, 38, 0.08);
+  --danger-border: rgba(220, 38, 38, 0.35);
+  --scroll-thumb: #c3cad8;
+  --scroll-thumb-hover: #a9b2c4;
+  --chart-axis: rgba(55, 65, 81, 0.78);
   --chart-grid: rgba(55, 65, 81, 0.14);
   --chart-text: #374151;
+  /* chart accents on white: darker shades that still read as the same hues */
+  --n-violet: #6d28d9;
+  --n-indigo: #4338ca;
+  --n-cyan: #0e7490;
+  --n-pink: #a21caf;
+  --n-green: #047857;
+  --n-amber: #a64b08;
+  --n-red: #be123c;
+  --n-slate: #64748b;
+  color-scheme: light;
 }
 html[data-theme="light"] body {
   background-image: none;
 }
 html[data-theme="light"] ::selection {
-  background: rgba(183, 121, 31, 0.25);
+  background: rgba(161, 98, 7, 0.22);
 }
 
 * {
@@ -106,11 +119,11 @@ body {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #232d3b;
+  background: var(--scroll-thumb);
   border-radius: 8px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #2d3a4a;
+  background: var(--scroll-thumb-hover);
 }
 
 /* -------------------------------------------------------------------- */
@@ -276,7 +289,7 @@ body {
   height: 3px;
   width: 100%;
   overflow: hidden;
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--overlay-3);
   border-radius: 999px;
 }
 .machine-progress::before {
@@ -301,7 +314,7 @@ body {
   display: block;
   height: 1rem;
   border-radius: 4px;
-  background: linear-gradient(90deg, var(--panel-border) 25%, rgba(255, 255, 255, 0.08) 37%, var(--panel-border) 63%);
+  background: linear-gradient(90deg, var(--panel-border) 25%, var(--overlay-3) 37%, var(--panel-border) 63%);
   background-size: 400% 100%;
   animation: skeleton-shimmer 1.4s ease infinite;
 }
@@ -331,12 +344,12 @@ body {
   font-weight: 600;
   letter-spacing: 0.02em;
   border: 1px solid var(--panel-border);
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--overlay-2);
 }
 
 .btn-primary {
   background: linear-gradient(180deg, var(--gold-bright), var(--gold));
-  color: #241a04;
+  color: var(--on-gold);
   font-weight: 700;
   border-radius: 10px;
   padding: 0.55rem 1.1rem;
@@ -354,7 +367,7 @@ body {
 }
 
 .btn-secondary {
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--overlay-2);
   border: 1px solid var(--panel-border);
   color: var(--text);
   border-radius: 10px;
@@ -362,7 +375,7 @@ body {
   transition: background 0.15s ease;
 }
 .btn-secondary:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--overlay-3);
 }
 .btn-secondary:disabled {
   opacity: 0.5;
@@ -370,15 +383,15 @@ body {
 }
 
 .btn-danger {
-  background: rgba(239, 68, 68, 0.12);
-  border: 1px solid rgba(239, 68, 68, 0.4);
-  color: #fca5a5;
+  background: var(--danger-bg);
+  border: 1px solid var(--danger-border);
+  color: var(--danger-text);
   border-radius: 10px;
   padding: 0.55rem 1.1rem;
 }
 
 .field-input {
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--overlay-2);
   border: 1px solid var(--panel-border);
   border-radius: 10px;
   padding: 0.55rem 0.75rem;
@@ -390,6 +403,27 @@ body {
 .field-input:focus {
   border-color: var(--gold);
 }
+/* Placeholders: the browser default is ~3:1 on white — use the readable "faint" token in both themes. */
+.field-input::placeholder,
+.nselect::placeholder {
+  color: var(--text-faint);
+  opacity: 1;
+}
+
+/* One consistent, theme-aware keyboard focus ring for everything interactive (mouse clicks don't trigger it). */
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 2px solid var(--gold-bright);
+  outline-offset: 2px;
+}
+.neon-page :where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline-color: #a78bfa;
+}
+html[data-theme="light"] .neon-page :where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline-color: #6d28d9;
+}
+.field-input:focus-visible {
+  outline-offset: 0;
+}
 
 /* Dropdowns (native <select>, see components/ui/Select.tsx): the closed box
    already looks right via .field-input above, but the OPEN popup list is
@@ -399,7 +433,7 @@ body {
    especially) actually need, so a light-background/light-text combo never
    happens regardless of platform. */
 select.field-input {
-  color-scheme: dark;
+  color-scheme: inherit;
 }
 select.field-input option {
   background: var(--panel);
@@ -417,7 +451,7 @@ select.field-input option {
 }
 .select-wrap .field-input {
   position: relative;
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--overlay-2);
 }
 .select-wrap::before,
 .select-wrap::after {
@@ -484,11 +518,11 @@ table.machine-table th {
 }
 table.machine-table td {
   padding: 0.65rem 0.9rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  border-bottom: 1px solid var(--overlay-2);
   white-space: nowrap;
 }
 table.machine-table tr:hover td {
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--overlay-1);
 }
 
 /* Receipt printing (Orders detail page's "Print Receipt" button) — hide the
@@ -525,7 +559,7 @@ table.machine-table tr:hover td {
 .upload-track {
   height: 6px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--overlay-3);
   overflow: hidden;
   position: relative;
 }
@@ -588,7 +622,7 @@ table.machine-table tr:hover td {
   align-items: center;
   justify-content: center;
   background: linear-gradient(180deg, var(--gold-bright), var(--gold));
-  color: #241a04;
+  color: var(--on-gold);
   border: none;
   cursor: pointer;
   flex-shrink: 0;
@@ -607,6 +641,10 @@ table.machine-table tr:hover td {
 .round-icon-btn.is-recording {
   background: linear-gradient(180deg, #f87171, var(--red));
   color: #2a0a0a;
+}
+html[data-theme="light"] .round-icon-btn.is-recording {
+  background: linear-gradient(180deg, #ef4444, #dc2626);
+  color: #ffffff;
 }
 .round-icon-btn.is-recording::before,
 .round-icon-btn.is-recording::after {
@@ -656,18 +694,144 @@ table.machine-table tr:hover td {
 }
 
 /* -------------------------------------------------------------------- */
-/* Analytics page — purple "neon" theme (scoped to .neon-page only)      */
+/* Analytics page ("neon" look). Dark mode = the purple neon dashboard;  */
+/* Light mode = the same layout on white/lavender. Everything inside is  */
+/* driven by the --nt-* / --n-* / --chart-* variables below.             */
 /* -------------------------------------------------------------------- */
 
 .neon-page {
-  --chart-axis: rgba(196, 181, 253, 0.65);
+  /* text */
+  --nt-1: #f5f3ff;
+  --nt-2: #ddd6fe;
+  --nt-3: #b0a3e0;
+  /* surfaces + borders */
+  --nt-surface: rgba(46, 16, 101, 0.4);
+  --nt-track: rgba(167, 139, 250, 0.16);
+  --nt-b1: rgba(167, 139, 250, 0.14);
+  --nt-b2: rgba(167, 139, 250, 0.32);
+  --nt-b-hover: rgba(167, 139, 250, 0.5);
+  --nt-hover-bg: rgba(139, 92, 246, 0.2);
+  /* status colours (text / border / fill) */
+  --nt-red: #fca5a5;
+  --nt-amber: #fcd34d;
+  --nt-green: #6ee7b7;
+  --nt-cyan: #67e8f9;
+  --nt-pink: #f0abfc;
+  --nt-fuchsia: #f5d0fe;
+  --nt-red-bd: rgba(248, 113, 113, 0.4);
+  --nt-red-bg: rgba(239, 68, 68, 0.1);
+  --nt-amber-bd: rgba(251, 191, 36, 0.4);
+  --nt-amber-bg: rgba(245, 158, 11, 0.1);
+  --nt-green-bd: rgba(52, 211, 153, 0.25);
+  --nt-green-bg: rgba(16, 185, 129, 0.07);
+  --nt-cyan-bd: rgba(34, 211, 238, 0.25);
+  --nt-cyan-bg: rgba(6, 182, 212, 0.06);
+  --nt-fuchsia-bg: rgba(217, 70, 239, 0.28);
+  /* accents used by charts */
+  --n-violet: #8b5cf6;
+  --n-indigo: #6366f1;
+  --n-cyan: #22d3ee;
+  --n-pink: #e879f9;
+  --n-green: #34d399;
+  --n-amber: #fbbf24;
+  --n-red: #fb7185;
+  --n-slate: #64748b;
+  --chart-axis: rgba(196, 181, 253, 0.7);
   --chart-grid: rgba(167, 139, 250, 0.14);
   --chart-text: #ddd6fe;
-  color: #ede9fe;
+  --chart-strong: #ede9fe;
+  --chart-label: #f5d0fe;
+  --chart-hub: #bbf7d0;
+  --chart-ring: #0b0720;
+
+  color: var(--nt-1);
   background:
     radial-gradient(ellipse 70% 45% at 15% 0%, rgba(124, 58, 237, 0.35), transparent 70%),
     radial-gradient(ellipse 60% 40% at 100% 100%, rgba(192, 38, 211, 0.22), transparent 70%),
     linear-gradient(160deg, #120a2e 0%, #0b0720 55%, #0d0826 100%);
+}
+
+html[data-theme="light"] .neon-page {
+  --nt-1: #1e1b4b;
+  --nt-2: #3b3486;
+  --nt-3: #5b5190;
+  --nt-surface: rgba(124, 58, 237, 0.06);
+  --nt-track: rgba(124, 58, 237, 0.14);
+  --nt-b1: rgba(124, 58, 237, 0.14);
+  --nt-b2: rgba(124, 58, 237, 0.3);
+  --nt-b-hover: rgba(124, 58, 237, 0.5);
+  --nt-hover-bg: rgba(124, 58, 237, 0.12);
+  --nt-red: #b91c1c;
+  --nt-amber: #92400e;
+  --nt-green: #047857;
+  --nt-cyan: #0e7490;
+  --nt-pink: #a21caf;
+  --nt-fuchsia: #86198f;
+  --nt-red-bd: rgba(220, 38, 38, 0.35);
+  --nt-red-bg: #fef2f2;
+  --nt-amber-bd: rgba(217, 119, 6, 0.4);
+  --nt-amber-bg: #fffbeb;
+  --nt-green-bd: rgba(5, 150, 105, 0.35);
+  --nt-green-bg: #ecfdf5;
+  --nt-cyan-bd: rgba(8, 145, 178, 0.35);
+  --nt-cyan-bg: #ecfeff;
+  --nt-fuchsia-bg: rgba(192, 38, 211, 0.14);
+  --n-violet: #6d28d9;
+  --n-indigo: #4338ca;
+  --n-cyan: #0e7490;
+  --n-pink: #a21caf;
+  --n-green: #047857;
+  --n-amber: #a64b08;
+  --n-red: #be123c;
+  --n-slate: #64748b;
+  --chart-axis: rgba(55, 48, 120, 0.75);
+  --chart-grid: rgba(91, 33, 182, 0.14);
+  --chart-text: #3b3486;
+  --chart-strong: #1e1b4b;
+  --chart-label: #86198f;
+  --chart-hub: #047857;
+  --chart-ring: #ffffff;
+  background:
+    radial-gradient(ellipse 70% 45% at 15% 0%, rgba(167, 139, 250, 0.28), transparent 70%),
+    radial-gradient(ellipse 60% 40% at 100% 100%, rgba(232, 121, 249, 0.16), transparent 70%),
+    linear-gradient(160deg, #f5f3ff 0%, #faf5ff 55%, #f4f5f9 100%);
+}
+
+/* semantic helpers (replace hard-coded palette classes) */
+.nt-1 { color: var(--nt-1); }
+.nt-2 { color: var(--nt-2); }
+.nt-3 { color: var(--nt-3); }
+.nt-red { color: var(--nt-red); }
+.nt-amber { color: var(--nt-amber); }
+.nt-green { color: var(--nt-green); }
+.nt-cyan { color: var(--nt-cyan); }
+.nt-pink { color: var(--nt-pink); }
+.nt-fuchsia { color: var(--nt-fuchsia); }
+.nt-b1 { border-color: var(--nt-b1); }
+.nt-b2 { border-color: var(--nt-b2); }
+.nt-bd-red { border-color: var(--nt-red-bd); }
+.nt-bd-amber { border-color: var(--nt-amber-bd); }
+.nt-bd-green { border-color: var(--nt-green-bd); }
+.nt-bd-cyan { border-color: var(--nt-cyan-bd); }
+.nt-bg-red { background: var(--nt-red-bg); }
+.nt-bg-red2 { background: var(--nt-red-bg); }
+.nt-bg-amber { background: var(--nt-amber-bg); }
+.nt-bg-green { background: var(--nt-green-bg); }
+.nt-bg-cyan { background: var(--nt-cyan-bg); }
+.nt-bg-fuchsia { background: var(--nt-fuchsia-bg); }
+.nt-surface { background: var(--nt-surface); }
+.nt-track { background: var(--nt-track); }
+.nt-card-hover { transition: border-color 0.15s; }
+.nt-card-hover:hover { border-color: var(--nt-b-hover); }
+.nt-icon-hover:hover { background: var(--nt-hover-bg); }
+.nt-toggle-on { background: #7c3aed; color: #fff; }
+/* tooltips stay dark in both modes, so their text variables are pinned to the dark values */
+.nt-tooltip {
+  --nt-1: #f5f3ff;
+  --nt-2: #ddd6fe;
+  --nt-3: #b0a3e0;
+  background: rgba(21, 12, 51, 0.96);
+  border: 1px solid rgba(167, 139, 250, 0.4);
 }
 
 .npanel {
@@ -680,11 +844,17 @@ table.machine-table tr:hover td {
   box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.02) inset, 0 10px 32px -18px rgba(124, 58, 237, 0.6);
   backdrop-filter: blur(6px);
 }
+html[data-theme="light"] .npanel {
+  background: linear-gradient(180deg, #ffffff 0%, #fbf9ff 100%);
+  border-color: rgba(124, 58, 237, 0.2);
+  box-shadow: 0 1px 2px rgba(76, 29, 149, 0.06), 0 12px 28px -20px rgba(124, 58, 237, 0.45);
+  backdrop-filter: none;
+}
 .npanel-title {
   font-size: 0.72rem;
   font-weight: 600;
   letter-spacing: 0.01em;
-  color: #f5f3ff;
+  color: var(--nt-1);
 }
 .nchip {
   display: inline-flex;
@@ -692,43 +862,69 @@ table.machine-table tr:hover td {
   padding: 0.1rem 0.5rem;
   border-radius: 999px;
   font-size: 0.62rem;
-  color: #ddd6fe;
+  color: var(--nt-2);
   background: rgba(139, 92, 246, 0.16);
   border: 1px solid rgba(139, 92, 246, 0.3);
   white-space: nowrap;
 }
+html[data-theme="light"] .nchip {
+  background: rgba(124, 58, 237, 0.08);
+  border-color: rgba(124, 58, 237, 0.25);
+}
 .nselect {
   font-size: 0.62rem;
-  color: #ddd6fe;
+  color: var(--nt-2);
   background: rgba(139, 92, 246, 0.16);
   border: 1px solid rgba(139, 92, 246, 0.3);
   border-radius: 6px;
   padding: 0.15rem 0.35rem;
   outline: none;
 }
+html[data-theme="light"] .nselect {
+  background: #ffffff;
+  border-color: rgba(124, 58, 237, 0.3);
+}
 .nselect option {
   background: #1a0f3d;
   color: #ede9fe;
+}
+html[data-theme="light"] .nselect option {
+  background: #ffffff;
+  color: #1e1b4b;
 }
 .nbtn {
   font-size: 0.65rem;
   font-weight: 600;
   padding: 0.25rem 0.65rem;
   border-radius: 7px;
-  color: #ddd6fe;
+  color: var(--nt-2);
   background: rgba(139, 92, 246, 0.14);
   border: 1px solid rgba(139, 92, 246, 0.35);
   transition: all 0.15s;
   cursor: pointer;
 }
+html[data-theme="light"] .nbtn {
+  background: #ffffff;
+  border-color: rgba(124, 58, 237, 0.35);
+}
 .nbtn:hover {
   background: rgba(139, 92, 246, 0.3);
+}
+html[data-theme="light"] .nbtn:hover {
+  background: rgba(124, 58, 237, 0.1);
 }
 .nbtn-on {
   color: #fff;
   background: linear-gradient(135deg, #7c3aed, #a21caf);
   border-color: transparent;
   box-shadow: 0 0 14px -2px rgba(168, 85, 247, 0.7);
+}
+html[data-theme="light"] .nbtn-on {
+  background: linear-gradient(135deg, #6d28d9, #86198f);
+  box-shadow: 0 4px 12px -4px rgba(109, 40, 217, 0.55);
+}
+html[data-theme="light"] .nbtn-on:hover {
+  background: linear-gradient(135deg, #5b21b6, #701a75);
 }
 .ntabs {
   display: inline-flex;
@@ -739,6 +935,10 @@ table.machine-table tr:hover td {
   background: rgba(20, 11, 48, 0.7);
   border: 1px solid rgba(139, 92, 246, 0.28);
 }
+html[data-theme="light"] .ntabs {
+  background: #ffffff;
+  border-color: rgba(124, 58, 237, 0.22);
+}
 .ntab {
   font-size: 0.75rem;
   font-weight: 500;
@@ -748,13 +948,26 @@ table.machine-table tr:hover td {
   transition: all 0.15s;
   cursor: pointer;
 }
+html[data-theme="light"] .ntab {
+  color: #5b21b6;
+}
 .ntab:hover {
   color: #fff;
 }
-.ntab-on {
+html[data-theme="light"] .ntab:hover {
+  background: rgba(124, 58, 237, 0.08);
+  color: #4c1d95;
+}
+.ntab-on,
+html[data-theme="light"] .ntab-on:hover {
   color: #fff;
   background: linear-gradient(135deg, #7c3aed, #c026d3);
   box-shadow: 0 0 16px -2px rgba(192, 38, 211, 0.65);
+}
+html[data-theme="light"] .ntab-on {
+  color: #fff;
+  background: linear-gradient(135deg, #6d28d9, #a21caf);
+  box-shadow: 0 6px 14px -6px rgba(109, 40, 217, 0.6);
 }
 
 @media print {
@@ -765,5 +978,19 @@ table.machine-table tr:hover td {
   .ntabs,
   .nbtn {
     display: none !important;
+  }
+}
+
+/* Respect the OS "reduce motion" setting for EVERY animation/transition (sweeping panel lines, pulses,
+   spinners, skeleton shimmer, Tailwind animate-*). Individual rules above stay as they are. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    animation-delay: 0s !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

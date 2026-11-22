@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   LayoutDashboard,
   Users,
@@ -49,6 +49,14 @@ interface CurrentUser {
   role: "OWNER" | "ADMIN" | "STAFF";
 }
 
+function timeAgoShort(iso: string): string {
+  const s = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 1000));
+  if (s < 60) return "abhi";
+  if (s < 3600) return `${Math.floor(s / 60)} min pehle`;
+  if (s < 86400) return `${Math.floor(s / 3600)} ghante pehle`;
+  return `${Math.floor(s / 86400)} din pehle`;
+}
+
 interface NotificationRow {
   id: string;
   title: string;
@@ -70,6 +78,8 @@ export function AppShell({
   const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
+  const notifRef = useRef<HTMLDivElement>(null);
+  const bellRef = useRef<HTMLButtonElement>(null);
   const [notifications, setNotifications] = useState<NotificationRow[]>([]);
   const [mode, setMode] = useState<"TEST" | "PRODUCTION" | null>(null);
 
@@ -113,6 +123,36 @@ export function AppShell({
     }
   }
 
+  async function markAllRead() {
+    const previous = notifications;
+    setNotifications([]);
+    try {
+      await api.patch("/api/notifications", { all: true });
+    } catch {
+      setNotifications(previous); // the server did not take it — show them again instead of silently losing them
+    }
+  }
+
+  // Close the panel on outside click or Escape (and hand focus back to the bell).
+  useEffect(() => {
+    if (!notifOpen) return;
+    const onDown = (e: MouseEvent) => {
+      if (notifRef.current && !notifRef.current.contains(e.target as Node)) setNotifOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setNotifOpen(false);
+        bellRef.current?.focus();
+      }
+    };
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [notifOpen]);
+
   async function handleLogout() {
     await api.post("/api/auth/logout");
     router.push("/login");
@@ -149,7 +189,7 @@ export function AppShell({
                   "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors",
                   active
                     ? "bg-[color:var(--gold)]/10 text-[color:var(--gold-bright)] border border-[color:var(--gold)]/30"
-                    : "text-[var(--text-dim)] hover:text-[var(--text)] hover:bg-white/[0.04] border border-transparent"
+                    : "text-[var(--text-dim)] hover:text-[var(--text)] hover:bg-[var(--overlay-2)] border border-transparent"
                 )}
               >
                 <Icon size={16} />
@@ -183,44 +223,76 @@ export function AppShell({
           <div className="hidden lg:block gold-rule w-24" />
           <div className="flex items-center gap-2">
           <ThemeSwitcher />
-          <div className="relative">
+          <div className="relative" ref={notifRef}>
             <button
-              className="relative p-2 rounded-lg hover:bg-white/[0.05] text-[var(--text-dim)]"
+              ref={bellRef}
+              className="relative p-2 rounded-lg hover:bg-[var(--overlay-2)] text-[var(--text-dim)] hover:text-[var(--text)]"
               onClick={() => setNotifOpen((v) => !v)}
+              aria-haspopup="dialog"
+              aria-expanded={notifOpen}
+              aria-controls="notification-panel"
               aria-label={`Notifications${notifications.length > 0 ? ` (${notifications.length} unread)` : ""}`}
             >
               <Bell size={18} />
               {notifications.length > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 bg-[var(--red)] text-white text-[9px] rounded-full w-4 h-4 flex items-center justify-center">
-                  {notifications.length}
+                <span
+                  aria-hidden="true"
+                  className="absolute -top-1 -right-1 bg-red-600 text-white text-[10px] font-semibold rounded-full min-w-4 h-4 px-1 flex items-center justify-center"
+                >
+                  {notifications.length > 99 ? "99+" : notifications.length}
                 </span>
               )}
             </button>
+            {/* Positioning lives on this wrapper: .panel sets position:relative, which would silently override an `absolute`
+                utility on the same element and push the list out of the header. */}
             {notifOpen && (
-              <div className="absolute right-0 mt-2 w-80 panel z-20 max-h-96 overflow-auto">
-                <div className="panel-body space-y-3">
-                  <div className="text-xs font-semibold uppercase tracking-wide text-[var(--text-dim)]">
-                    AI Call Reports
+              <div
+                id="notification-panel"
+                role="dialog"
+                aria-label="Notifications"
+                className="absolute right-0 top-full mt-2 w-80 max-w-[calc(100vw-2rem)] z-30"
+              >
+                <div className="panel shadow-2xl">
+                <div className="panel-body space-y-3 max-h-[26rem] overflow-y-auto">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="text-xs font-semibold uppercase tracking-wide text-[var(--text-dim)]">Notifications</div>
+                    {notifications.length > 0 && (
+                      <button onClick={markAllRead} className="text-[11px] text-[var(--gold-bright)] hover:underline">
+                        Mark all read
+                      </button>
+                    )}
                   </div>
                   {notifications.length === 0 && (
-                    <div className="text-xs text-[var(--text-faint)]">Koi naya notification nahi hai.</div>
+                    <div className="text-xs text-[var(--text-dim)]">Koi naya notification nahi hai.</div>
                   )}
-                  {notifications.map((n) => (
-                    <div key={n.id} className="border border-[var(--panel-border)] rounded-lg p-2.5">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="text-xs font-semibold">{n.title}</div>
-                        <button
-                          onClick={() => markRead(n.id)}
-                          className="text-[10px] text-[var(--text-faint)] hover:text-[var(--gold-bright)]"
-                        >
-                          mark read
-                        </button>
+                  {notifications.map((n) => {
+                    const isAlert = n.title.startsWith("⚠");
+                    return (
+                      <div
+                        key={n.id}
+                        className={clsx(
+                          "border rounded-lg p-2.5",
+                          isAlert ? "border-[color:var(--yellow)]/50 bg-[color:var(--yellow)]/10" : "border-[var(--panel-border)]"
+                        )}
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0">
+                            <div className="text-xs font-semibold">{n.title}</div>
+                            <div className="text-[10px] text-[var(--text-faint)]">{timeAgoShort(n.createdAt)}</div>
+                          </div>
+                          <button
+                            onClick={() => markRead(n.id)}
+                            aria-label={`Mark "${n.title}" as read`}
+                            className="shrink-0 text-[11px] text-[var(--text-dim)] hover:text-[var(--gold-bright)] hover:underline"
+                          >
+                            mark read
+                          </button>
+                        </div>
+                        <pre className="whitespace-pre-wrap text-[11px] text-[var(--text-dim)] mt-1 font-sans">{n.body}</pre>
                       </div>
-                      <pre className="whitespace-pre-wrap text-[11px] text-[var(--text-dim)] mt-1 font-sans">
-                        {n.body}
-                      </pre>
-                    </div>
-                  ))}
+                    );
+                  })}
+                </div>
                 </div>
               </div>
             )}
@@ -233,8 +305,8 @@ export function AppShell({
             className={clsx(
               "px-4 lg:px-6 py-1.5 text-[11px] font-medium flex items-center gap-1.5 border-b",
               mode === "PRODUCTION"
-                ? "bg-red-500/10 text-red-300 border-[color:var(--red)]/30"
-                : "bg-white/[0.02] text-[var(--text-faint)] border-[var(--panel-border)]"
+                ? "bg-red-500/10 text-[var(--danger-text)] border-[color:var(--red)]/30"
+                : "bg-[var(--overlay-1)] text-[var(--text-faint)] border-[var(--panel-border)]"
             )}
           >
             {mode === "PRODUCTION" ? (

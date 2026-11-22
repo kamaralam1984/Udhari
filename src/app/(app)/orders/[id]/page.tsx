@@ -177,7 +177,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
         </div>
       </div>
 
-      {error && <div className="text-xs text-red-300 bg-red-500/10 border border-red-500/30 rounded-lg p-3">{error}</div>}
+      {error && <div className="text-xs text-[var(--danger-text)] bg-red-500/10 border border-red-500/30 rounded-lg p-3">{error}</div>}
 
       {paying && (
         <Panel glow>

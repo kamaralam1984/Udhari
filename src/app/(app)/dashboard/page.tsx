@@ -230,11 +230,11 @@ export default function DashboardPage() {
         </Panel>
       )}
 
-      <div className="grid md:grid-cols-2 gap-4">
+      <div className="grid md:grid-cols-2 gap-4 items-start">
         <Panel warn={overdueFollowUps.length > 0}>
           <PanelBody>
             <PanelHeading title="Overdue Customers" subtitle="Promised/due date nikal chuki, abhi tak follow-up pending hai." />
-            <div className="space-y-2">
+            <div className="space-y-2 max-h-96 overflow-y-auto pr-1">
               {loadingOverdue && (
                 <>
                   <Skeleton className="h-5" />
@@ -267,8 +267,11 @@ export default function DashboardPage() {
 
         <Panel warn={brokenPromises.length > 0}>
           <PanelBody>
-            <PanelHeading title="Broken Promises" subtitle="Promise ki gayi date nikal gayi aur payment nahi mila." />
-            <div className="space-y-2">
+            <PanelHeading
+              title="Broken Promises"
+              subtitle={`Promise ki gayi date nikal gayi aur payment nahi mila.${brokenPromises.length > 0 ? ` (${brokenPromises.length})` : ""}`}
+            />
+            <div className="space-y-2 max-h-96 overflow-y-auto pr-1">
               {loadingBrokenPromises && (
                 <>
                   <Skeleton className="h-5" />
@@ -315,7 +318,7 @@ export default function DashboardPage() {
               tasks.map((t) => (
               <div
                 key={t.id}
-                className="flex items-start justify-between gap-3 border border-[var(--panel-border)] rounded-lg p-3 cursor-pointer hover:bg-white/[0.02]"
+                className="flex items-start justify-between gap-3 border border-[var(--panel-border)] rounded-lg p-3 cursor-pointer hover:bg-[var(--overlay-1)]"
                 onClick={() => (t.call ? router.push(`/calls/${t.call.id}`) : router.push(`/customers/${t.customer.id}`))}
               >
                 <div>

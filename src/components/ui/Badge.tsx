@@ -39,8 +39,8 @@ const TONE_CLASSES: Record<string, string> = {
   gold: "border-[color:var(--gold)]/50 text-[color:var(--gold-bright)] bg-[color:var(--gold)]/10",
   green: "border-[color:var(--green)]/50 text-[color:var(--green-bright)] bg-[color:var(--green)]/10",
   yellow: "border-[color:var(--yellow)]/50 text-[color:var(--yellow-bright)] bg-[color:var(--yellow)]/10",
-  red: "border-[color:var(--red)]/50 text-red-300 bg-red-500/10",
-  neutral: "border-[color:var(--panel-border)] text-[color:var(--text-dim)] bg-white/[0.03]",
+  red: "border-[color:var(--red)]/50 text-[var(--danger-text)] bg-red-500/10",
+  neutral: "border-[color:var(--panel-border)] text-[color:var(--text-dim)] bg-[var(--overlay-2)]",
 };
 
 export function Badge({ value, label, tone: toneOverride }: { value: string; label?: string; tone?: string }) {

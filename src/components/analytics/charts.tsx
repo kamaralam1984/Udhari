@@ -3,19 +3,23 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import type { FlowLink, FlowNode } from "@/lib/analytics";
 
+/** Accent palette. Values are CSS variables so Dark and Light each get shades that stay readable (see --n-* in globals.css). */
 export const NEON = {
-  violet: "#8b5cf6",
-  indigo: "#6366f1",
-  cyan: "#22d3ee",
-  pink: "#e879f9",
-  green: "#34d399",
-  amber: "#fbbf24",
-  red: "#fb7185",
-  slate: "#64748b",
+  violet: "var(--n-violet, #8b5cf6)",
+  indigo: "var(--n-indigo, #6366f1)",
+  cyan: "var(--n-cyan, #22d3ee)",
+  pink: "var(--n-pink, #e879f9)",
+  green: "var(--n-green, #34d399)",
+  amber: "var(--n-amber, #fbbf24)",
+  red: "var(--n-red, #fb7185)",
+  slate: "var(--n-slate, #64748b)",
   // Theme-aware (see --chart-* in globals.css): pale on dark surfaces, dark on the light theme.
   grid: "var(--chart-grid, rgba(167,139,250,0.14))",
   axis: "var(--chart-axis, rgba(196,181,253,0.65))",
 } as const;
+
+/** A translucent version of any colour (works with the CSS-variable palette above). */
+export const tint = (color: string, pct = 14) => `color-mix(in srgb, ${color} ${pct}%, transparent)`;
 
 export type Tone = keyof Pick<typeof NEON, "violet" | "cyan" | "green" | "red" | "amber" | "pink" | "slate" | "indigo">;
 
@@ -31,6 +35,20 @@ function useMeasure<T extends HTMLElement>(fallback: number) {
     return () => ro.disconnect();
   }, []);
   return [ref, w] as const;
+}
+
+/** True when the user asked the OS for less motion — SMIL <animate> is not covered by the CSS media query, so we skip rendering it. */
+function usePrefersReducedMotion() {
+  const [reduced, setReduced] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia?.("(prefers-reduced-motion: reduce)");
+    if (!mq) return;
+    setReduced(mq.matches);
+    const on = (e: MediaQueryListEvent) => setReduced(e.matches);
+    mq.addEventListener?.("change", on);
+    return () => mq.removeEventListener?.("change", on);
+  }, []);
+  return reduced;
 }
 
 function niceMax(v: number): number {
@@ -123,8 +141,8 @@ export function LineAreaChart({
         <defs>
           {series.map((s, si) => (
             <linearGradient key={si} id={`${uid}-g${si}`} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor={s.color} stopOpacity="0.38" />
-              <stop offset="100%" stopColor={s.color} stopOpacity="0" />
+              <stop offset="0%" style={{ stopColor: s.color, stopOpacity: 0.38 }} />
+              <stop offset="100%" style={{ stopColor: s.color, stopOpacity: 0 }} />
             </linearGradient>
           ))}
         </defs>
@@ -165,19 +183,19 @@ export function LineAreaChart({
           <g>
             <line x1={x(hover)} x2={x(hover)} y1={pad.t} y2={pad.t + ih} stroke="rgba(255,255,255,0.35)" />
             {series.map((s, si) =>
-              s.values[hover] == null ? null : <circle key={si} cx={x(hover)} cy={y(s.values[hover] as number)} r="3.5" fill={s.color} stroke="#0b0720" strokeWidth="1.5" />
+              s.values[hover] == null ? null : <circle key={si} cx={x(hover)} cy={y(s.values[hover] as number)} r="3.5" fill={s.color} stroke="var(--chart-ring, #0b0720)" strokeWidth="1.5" />
             )}
           </g>
         )}
       </svg>
       {hover !== null && (
         <div
-          className="pointer-events-none absolute top-1 z-10 rounded-md border border-violet-400/30 bg-[#150c33]/95 px-2 py-1 text-[10px] leading-tight shadow-lg"
+          className="pointer-events-none absolute top-1 z-10 rounded-md border nt-b2 bg-[#150c33]/95 px-2 py-1 text-[10px] leading-tight shadow-lg"
           style={{ left: `${Math.min(78, Math.max(2, (x(hover) / W) * 100 - 10))}%` }}
         >
-          <div className="mb-0.5 font-semibold text-violet-200">{labels[hover]}</div>
+          <div className="mb-0.5 font-semibold nt-2">{labels[hover]}</div>
           {series.map((s) => (
-            <div key={s.name} className="flex items-center gap-1 text-violet-100/90">
+            <div key={s.name} className="flex items-center gap-1 nt-1">
               <span className="inline-block h-1.5 w-1.5 rounded-full" style={{ background: s.color }} />
               {s.name}: <b>{s.values[hover] == null ? "—" : yFormat(s.values[hover] as number)}</b>
             </div>
@@ -245,8 +263,8 @@ export function BarChart({
         <defs>
           {series.map((s, si) => (
             <linearGradient key={si} id={`${uid}-b${si}`} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor={s.color} stopOpacity="1" />
-              <stop offset="100%" stopColor={s.color} stopOpacity="0.35" />
+              <stop offset="0%" style={{ stopColor: s.color, stopOpacity: 1 }} />
+              <stop offset="100%" style={{ stopColor: s.color, stopOpacity: 0.35 }} />
             </linearGradient>
           ))}
         </defs>
@@ -290,10 +308,10 @@ export function BarChart({
         })}
       </svg>
       {hover !== null && (
-        <div className="pointer-events-none absolute right-1 top-0 z-10 rounded-md border border-violet-400/30 bg-[#150c33]/95 px-2 py-1 text-[10px] leading-tight">
-          <div className="font-semibold text-violet-200">{labels[hover]}</div>
+        <div className="pointer-events-none absolute right-1 top-0 z-10 rounded-md border nt-b2 bg-[#150c33]/95 px-2 py-1 text-[10px] leading-tight">
+          <div className="font-semibold nt-2">{labels[hover]}</div>
           {series.map((s) => (
-            <div key={s.name} className="text-violet-100/90">
+            <div key={s.name} className="nt-1">
               <span className="mr-1 inline-block h-1.5 w-1.5 rounded-full" style={{ background: s.color }} />
               {s.name}: <b>{yFormat(s.values[hover] ?? 0)}{unit}</b>
             </div>
@@ -348,7 +366,7 @@ export function Heatmap({
   return (
     <div>
       <div className="flex gap-1.5">
-        <div className="flex flex-col justify-between py-0.5 text-[9px] text-violet-200/70" style={{ height: 112 }}>
+        <div className="flex flex-col justify-between py-0.5 text-[9px] nt-3" style={{ height: 112 }}>
           {DAYS.map((d) => (
             <span key={d} className="leading-none">
               {d}
@@ -380,7 +398,7 @@ export function Heatmap({
               })
             )}
           </div>
-          <div className="mt-1 flex justify-between text-[9px] text-violet-200/70">
+          <div className="mt-1 flex justify-between text-[9px] nt-3">
             {[0, 4, 8, 12, 16, 20].map((h) => (
               <span key={h}>{h === 0 ? "12a" : h === 12 ? "12p" : h > 12 ? `${h - 12}p` : `${h}a`}</span>
             ))}
@@ -394,7 +412,7 @@ export function Heatmap({
           />
         </div>
       </div>
-      <div className="mt-1 h-3 text-[10px] text-violet-100/90">{tip ?? (pickup ? "Last 30 days · pick-up rate per slot (click a cell for the calls)" : `Last 30 days · busiest slot ${max} calls${onSelect ? " · click a cell" : ""}`)}</div>
+      <div className="mt-1 h-3 text-[10px] nt-1">{tip ?? (pickup ? "Last 30 days · pick-up rate per slot (click a cell for the calls)" : `Last 30 days · busiest slot ${max} calls${onSelect ? " · click a cell" : ""}`)}</div>
     </div>
   );
 }
@@ -423,8 +441,8 @@ export function RingGauge({
       <svg viewBox="0 0 80 80" width={size} height={size} className="-rotate-90">
         <defs>
           <linearGradient id={uid} x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor={color} />
-            <stop offset="100%" stopColor={NEON.violet} />
+            <stop offset="0%" style={{ stopColor: color }} />
+            <stop offset="100%" style={{ stopColor: NEON.violet }} />
           </linearGradient>
         </defs>
         <circle cx="40" cy="40" r={r} fill="none" stroke="rgba(139,92,246,0.2)" strokeWidth="7" />
@@ -441,7 +459,7 @@ export function RingGauge({
           style={{ transition: "stroke-dashoffset .9s ease", filter: `drop-shadow(0 0 4px ${color})` }}
         />
       </svg>
-      <div className="absolute inset-0 flex items-center justify-center text-sm font-bold text-white">{children}</div>
+      <div className="absolute inset-0 flex items-center justify-center text-sm font-bold nt-1">{children}</div>
     </div>
   );
 }
@@ -496,7 +514,7 @@ export function FlowDiagram({ nodes, links }: { nodes: FlowNode[]; links: FlowLi
   }, [nodes, links]);
 
   if (nodes.length === 0) {
-    return <div className="py-10 text-center text-xs text-violet-200/60">Is range me abhi koi call nahi hui.</div>;
+    return <div className="py-10 text-center text-xs nt-3">Is range me abhi koi call nahi hui.</div>;
   }
 
   return (
@@ -509,7 +527,7 @@ export function FlowDiagram({ nodes, links }: { nodes: FlowNode[]; links: FlowLi
       {[...layout.pos.values()].map(({ x, y, h, node }) => (
         <g key={node.id}>
           <rect x={x} y={y} width={layout.nodeW} height={h} rx="3" fill={NEON[node.tone]} style={{ filter: `drop-shadow(0 0 5px ${NEON[node.tone]})` }} />
-          <text x={x + layout.nodeW + 5} y={y + Math.min(h / 2, 14) + 1} fontSize="12" fill="#ede9fe" fontWeight="700">
+          <text x={x + layout.nodeW + 5} y={y + Math.min(h / 2, 14) + 1} fontSize="12" fill="var(--chart-strong, #ede9fe)" fontWeight="700">
             {node.value}
           </text>
           <text x={x + layout.nodeW + 5} y={y + Math.min(h / 2, 14) + 13} fontSize="10" fill={NEON.axis}>
@@ -587,6 +605,7 @@ export function WorldMap({ routes }: { routes: MapRoute[] }) {
   const [hub] = [project(MAP_HUB.lat, MAP_HUB.lon)];
   const maxCount = Math.max(1, ...routes.map((r) => r.count));
   const [active, setActive] = useState<string | null>(null);
+  const reduceMotion = usePrefersReducedMotion();
 
   return (
     <div>
@@ -613,7 +632,7 @@ export function WorldMap({ routes }: { routes: MapRoute[] }) {
             <g key={r.id} opacity={on ? 1 : 0.25}>
               <path d={`M${hub[0]},${hub[1]} Q${mx},${my} ${x},${y}`} fill="none" stroke={NEON.cyan} strokeOpacity="0.25" strokeWidth={w + 2} />
               <path d={`M${hub[0]},${hub[1]} Q${mx},${my} ${x},${y}`} fill="none" stroke={NEON.cyan} strokeWidth={w} strokeDasharray="4 6" strokeLinecap="round">
-                <animate attributeName="stroke-dashoffset" from="20" to="0" dur="1.4s" repeatCount="indefinite" />
+                {!reduceMotion && <animate attributeName="stroke-dashoffset" from="20" to="0" dur="1.4s" repeatCount="indefinite" />}
               </path>
             </g>
           );
@@ -624,10 +643,10 @@ export function WorldMap({ routes }: { routes: MapRoute[] }) {
           return (
             <g key={`n-${r.id}`} opacity={on ? 1 : 0.3} onMouseEnter={() => setActive(r.id)} onMouseLeave={() => setActive(null)} style={{ cursor: "default" }}>
               <circle cx={x} cy={y} r="9" fill={NEON.pink} opacity="0.18">
-                <animate attributeName="r" values="5;11;5" dur="2.6s" repeatCount="indefinite" />
+                {!reduceMotion && <animate attributeName="r" values="5;11;5" dur="2.6s" repeatCount="indefinite" />}
               </circle>
               <circle cx={x} cy={y} r="3.6" fill={NEON.pink} style={{ filter: `drop-shadow(0 0 5px ${NEON.pink})` }} />
-              <text x={x} y={y - 11} textAnchor="middle" fontSize="15" fill="#f5d0fe" fontWeight="600">
+              <text x={x} y={y - 11} textAnchor="middle" fontSize="15" fill="var(--chart-label, #f5d0fe)" fontWeight="600">
                 {r.label}
               </text>
             </g>
@@ -635,15 +654,15 @@ export function WorldMap({ routes }: { routes: MapRoute[] }) {
         })}
         <g>
           <circle cx={hub[0]} cy={hub[1]} r="12" fill={NEON.green} opacity="0.2">
-            <animate attributeName="r" values="6;15;6" dur="2.2s" repeatCount="indefinite" />
+            {!reduceMotion && <animate attributeName="r" values="6;15;6" dur="2.2s" repeatCount="indefinite" />}
           </circle>
           <circle cx={hub[0]} cy={hub[1]} r="4.6" fill={NEON.green} style={{ filter: `drop-shadow(0 0 6px ${NEON.green})` }} />
-          <text x={hub[0]} y={hub[1] + 22} textAnchor="middle" fontSize="15" fill="#bbf7d0" fontWeight="700">
+          <text x={hub[0]} y={hub[1] + 22} textAnchor="middle" fontSize="15" fill="var(--chart-hub, #bbf7d0)" fontWeight="700">
             {MAP_HUB.label}
           </text>
         </g>
       </svg>
-      <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-[10px] text-violet-200/80">
+      <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-[10px] nt-3">
         <span className="inline-flex items-center gap-1">
           <i className="inline-block h-2 w-2 rounded-full" style={{ background: NEON.green }} /> Customer hub
         </span>

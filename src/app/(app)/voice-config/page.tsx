@@ -82,7 +82,7 @@ export default function VoiceConfigPage() {
       <Panel>
         <PanelBody>
           <PanelHeading title="Custom / Client Voice" subtitle="Sirf tab available hai jab provider technically support kare AUR consent file par ho." />
-          <div className="flex items-center gap-3 p-3 rounded-lg border border-[var(--panel-border)] bg-white/[0.02]">
+          <div className="flex items-center gap-3 p-3 rounded-lg border border-[var(--panel-border)] bg-[var(--overlay-1)]">
             {loading ? (
               <>
                 <Skeleton className="h-5 w-5 rounded-full" />

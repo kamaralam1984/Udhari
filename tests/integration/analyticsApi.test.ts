@@ -212,4 +212,34 @@ describe("analytics / campaigns / live-calls APIs", () => {
       });
     }
   });
+
+  it("notifications: mark one read, mark all read, and reject bad input", async () => {
+    // This runs against the shared dev DB, so snapshot the REAL unread rows and restore them afterwards.
+    const realUnread = await db.notification.findMany({ where: { channel: "DASHBOARD", readAt: null }, select: { id: true } });
+    const mine: string[] = [];
+    try {
+      for (const title of ["QA note A", "QA note B"]) {
+        mine.push((await db.notification.create({ data: { channel: "DASHBOARD", status: "SENT", title, body: "qa" } })).id);
+      }
+      expect((await send("PATCH", "/api/notifications", "", { id: mine[0] })).status).toBe(401);
+
+      const one = await send("PATCH", "/api/notifications", staffCookie, { id: mine[0] });
+      expect(one.status).toBe(200);
+      expect((await db.notification.findUniqueOrThrow({ where: { id: mine[0] } })).readAt).not.toBeNull();
+      expect((await db.notification.findUniqueOrThrow({ where: { id: mine[1] } })).readAt).toBeNull();
+
+      expect((await send("PATCH", "/api/notifications", ownerCookie, { id: "does-not-exist" })).status).toBe(404);
+      expect((await send("PATCH", "/api/notifications", ownerCookie, {})).status).toBe(400);
+      expect((await send("PATCH", "/api/notifications", ownerCookie, { all: false })).status).toBe(400);
+
+      const all = await send("PATCH", "/api/notifications", ownerCookie, { all: true });
+      expect(all.status).toBe(200);
+      expect(await db.notification.count({ where: { channel: "DASHBOARD", readAt: null } })).toBe(0);
+      const list = await (await get("/api/notifications?unreadOnly=true", ownerCookie)).json();
+      expect(list.notifications).toEqual([]);
+    } finally {
+      await db.notification.deleteMany({ where: { id: { in: mine } } });
+      if (realUnread.length) await db.notification.updateMany({ where: { id: { in: realUnread.map((n) => n.id) } }, data: { readAt: null } });
+    }
+  });
 });

@@ -1,32 +1,31 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Moon, Sparkles, Sun } from "lucide-react";
+import { Moon, Sun } from "lucide-react";
 
-export type ThemeName = "classic" | "neon" | "light";
+export type ThemeName = "dark" | "light";
 
 const OPTIONS: { key: ThemeName; label: string; Icon: typeof Moon }[] = [
-  { key: "classic", label: "Classic (dark gold)", Icon: Moon },
-  { key: "neon", label: "Neon (purple)", Icon: Sparkles },
-  { key: "light", label: "Light", Icon: Sun },
+  { key: "dark", label: "Dark mode", Icon: Moon },
+  { key: "light", label: "Light mode", Icon: Sun },
 ];
 
 function apply(t: ThemeName) {
-  if (t === "classic") delete document.documentElement.dataset.theme;
-  else document.documentElement.dataset.theme = t;
+  if (t === "light") document.documentElement.dataset.theme = "light";
+  else delete document.documentElement.dataset.theme;
 }
 
-/** Three-way theme toggle; the choice is a per-browser convenience (localStorage), applied before paint by the inline script in layout.tsx. */
+/**
+ * Dark / Light toggle. The first visit follows the OS setting; after that the
+ * explicit choice wins. It is applied before first paint by the inline script
+ * in layout.tsx, so there is no flash. localStorage is only a per-browser
+ * convenience — everything works without it.
+ */
 export function ThemeSwitcher() {
-  const [theme, setTheme] = useState<ThemeName>("classic");
+  const [theme, setTheme] = useState<ThemeName>("dark");
 
   useEffect(() => {
-    try {
-      const saved = window.localStorage.getItem("theme");
-      if (saved === "neon" || saved === "light") setTheme(saved);
-    } catch {
-      /* storage blocked — stay on classic */
-    }
+    setTheme(document.documentElement.dataset.theme === "light" ? "light" : "dark");
   }, []);
 
   function choose(t: ThemeName) {
@@ -35,7 +34,7 @@ export function ThemeSwitcher() {
     try {
       window.localStorage.setItem("theme", t);
     } catch {
-      /* ignore */
+      /* storage blocked — the choice just will not persist */
     }
   }
 

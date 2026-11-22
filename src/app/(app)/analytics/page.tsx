@@ -31,6 +31,7 @@ import {
   MAP_HUB,
   NEON,
   RingGauge,
+  tint,
   WorldMap,
   type MapRoute,
 } from "@/components/analytics/charts";
@@ -188,7 +189,7 @@ function NPanel({ title, right, children, className = "" }: { title: string; rig
 }
 
 function Empty({ text }: { text: string }) {
-  return <div className="py-6 text-center text-xs text-violet-200/60">{text}</div>;
+  return <div className="py-6 text-center text-xs nt-3">{text}</div>;
 }
 
 function Sparkline({ values, color = NEON.cyan }: { values: number[]; color?: string }) {
@@ -222,7 +223,7 @@ function RangeSelect({ value, onChange }: { value: RangeKey; onChange: (r: Range
 function RealTimePanel({ d, range, setRange, drill }: { d: AnalyticsData; range: RangeKey; setRange: (r: RangeKey) => void; drill: DrillOpen }) {
   return (
     <NPanel title="Real-Time Analytics Panel" right={<RangeSelect value={range} onChange={setRange} />}>
-      <div className="mb-1 text-[10px] text-violet-200/70">Connected vs missed calls ({d.totals.total} placed) · click a point for the calls</div>
+      <div className="mb-1 text-[10px] nt-3">Connected vs missed calls ({d.totals.total} placed) · click a point for the calls</div>
       <LineAreaChart
         labels={d.volume.labels}
         onSelect={(i) => drill(bucketQuery(d, i, "all"), `${d.volume.labels[i]} — calls`)}
@@ -273,9 +274,9 @@ function HeatPanel({ d, drill }: { d: AnalyticsData; drill: DrillOpen }) {
     <NPanel
       title="Peak Call Times"
       right={
-        <div className="flex overflow-hidden rounded-md border border-violet-400/30 text-[10px]">
+        <div className="flex overflow-hidden rounded-md border nt-b2 text-[10px]">
           {(["calls", "pickup"] as const).map((m) => (
-            <button key={m} onClick={() => setMode(m)} className={`px-2 py-0.5 ${mode === m ? "bg-violet-600 text-white" : "text-violet-200"}`}>
+            <button key={m} onClick={() => setMode(m)} className={`px-2.5 py-1.5 ${mode === m ? "nt-toggle-on" : "nt-2"}`}>
               {m === "calls" ? "Calls" : "Pick-up %"}
             </button>
           ))}
@@ -288,12 +289,12 @@ function HeatPanel({ d, drill }: { d: AnalyticsData; drill: DrillOpen }) {
         mode={mode}
         onSelect={(dow, hour) => drill(`dow=${dow}&hour=${hour}`, `${DAY_NAMES[dow]} ${hour}:00 — last 30 days`)}
       />
-      <div className="mt-2 rounded-lg border border-emerald-400/20 bg-emerald-500/5 px-2 py-1.5 text-[10px] text-emerald-100/90">
-        <b className="text-emerald-300">Best time to call:</b>{" "}
+      <div className="mt-2 rounded-lg border nt-bd-green nt-bg-green px-2 py-1.5 text-[10px] nt-green">
+        <b className="nt-green">Best time to call:</b>{" "}
         {d.bestSlots.length === 0 ? "abhi kam data hai (har slot me 3+ calls chahiye)." : d.bestSlots.map((b) => bestSlotLabel(b)).join("  |  ")}
-        <div className="mt-1 text-[9px] text-emerald-200/70">
+        <div className="mt-1 text-[9px] nt-green">
           Scheduler smart timing:{" "}
-          <b className={d.scheduler.useBestCallTime ? "text-emerald-300" : "text-violet-300/70"}>
+          <b className={d.scheduler.useBestCallTime ? "nt-green" : "nt-3"}>
             {d.scheduler.useBestCallTime ? `ON (max ${d.scheduler.maxDeferHours}h wait)` : "OFF"}
           </b>
           {d.viewer.scope === "all" && (
@@ -323,33 +324,33 @@ function GaugeRow({ d }: { d: AnalyticsData }) {
   return (
     <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
       <NPanel title="Concurrent Calls">
-        <div className="text-[10px] text-violet-200/70">Live now</div>
+        <div className="text-[10px] nt-3">Live now</div>
         <div className="flex items-end justify-between gap-2">
-          <div className="text-3xl font-bold leading-none text-white tabular-nums">{nf(d.live.concurrent)}</div>
+          <div className="text-3xl font-bold leading-none nt-1 tabular-nums">{nf(d.live.concurrent)}</div>
           <div className="w-14">
             <Sparkline values={d.volume.connected} />
           </div>
         </div>
-        <div className="mt-1.5 text-[10px] text-violet-200/70">
-          Total today: <b className="text-violet-100">{nf(d.live.callsToday)}</b>
+        <div className="mt-1.5 text-[10px] nt-3">
+          Total today: <b className="nt-1">{nf(d.live.callsToday)}</b>
         </div>
       </NPanel>
       <NPanel title="Call Success Rate">
-        <div className="text-3xl font-bold leading-none text-white tabular-nums">{d.gauges.callSuccessRate.toFixed(2)}%</div>
+        <div className="text-3xl font-bold leading-none nt-1 tabular-nums">{d.gauges.callSuccessRate.toFixed(2)}%</div>
         <div className="mt-2 flex items-center gap-1.5 text-[11px]" style={{ color: stable ? NEON.green : NEON.amber }}>
           <span className="inline-block h-2 w-2 rounded-full" style={{ background: stable ? NEON.green : NEON.amber, boxShadow: `0 0 8px ${stable ? NEON.green : NEON.amber}` }} />
           {stable ? "Stable" : "Degraded"}
         </div>
-        <div className="mt-1 text-[10px] text-violet-200/70">{d.totals.failed} failed of {d.totals.total}</div>
+        <div className="mt-1 text-[10px] nt-3">{d.totals.failed} failed of {d.totals.total}</div>
       </NPanel>
       <NPanel title="Support Availability">
         <div className="flex items-center gap-3">
           <RingGauge value={d.gauges.staffResolutionRate} color={NEON.cyan}>
             <span className="text-[13px]">{Math.round(d.gauges.staffResolutionRate)}%</span>
           </RingGauge>
-          <div className="text-[10px] leading-snug text-violet-200/70">
+          <div className="text-[10px] leading-snug nt-3">
             Staff tasks resolved
-            <div className="font-semibold text-violet-100">{d.gauges.openTasks} open</div>
+            <div className="font-semibold nt-1">{d.gauges.openTasks} open</div>
           </div>
         </div>
       </NPanel>
@@ -381,30 +382,30 @@ function CampaignPanel({ d, big = false }: { d: AnalyticsData; big?: boolean }) 
         <Empty text="Koi active campaign nahi." />
       ) : (
         <div className="space-y-2">
-          <div className="grid grid-cols-[1.6fr_1.2fr_0.6fr_auto] gap-2 px-1 text-[9px] uppercase tracking-wide text-violet-300/60">
+          <div className="grid grid-cols-[1.6fr_1.2fr_0.6fr_auto] gap-2 px-1 text-[9px] uppercase tracking-wide nt-3">
             <span>Campaign</span>
             <span>Progress</span>
             <span>Success</span>
             <span>Action</span>
           </div>
           {rows.map((c) => (
-            <div key={c.key} className={`grid grid-cols-[1.6fr_1.2fr_0.6fr_auto] items-center gap-2 rounded-lg border border-violet-400/15 bg-violet-950/40 px-2 ${big ? "py-3" : "py-2"}`}>
+            <div key={c.key} className={`grid grid-cols-[1.6fr_1.2fr_0.6fr_auto] items-center gap-2 rounded-lg border nt-b1 nt-surface px-2 ${big ? "py-3" : "py-2"}`}>
               <div className="min-w-0">
-                <div className="truncate text-[11px] font-semibold text-violet-50" title={c.name}>
-                  {c.kind === "campaign" && <span className="mr-1 rounded bg-fuchsia-500/25 px-1 text-[8px] uppercase text-fuchsia-200">live</span>}
+                <div className="truncate text-[11px] font-semibold nt-1" title={c.name}>
+                  {c.kind === "campaign" && <span className="mr-1 rounded nt-bg-fuchsia px-1 text-[8px] uppercase nt-fuchsia">live</span>}
                   {c.name}
                 </div>
                 {big && (
-                  <div className="text-[10px] text-violet-300/70">
+                  <div className="text-[10px] nt-3">
                     {c.key === "recovery" ? `${formatInrClient(c.done)} of ${formatInrClient(c.total)}` : `${nf(c.done)} of ${nf(c.total)}`}
                   </div>
                 )}
               </div>
               <div className="flex items-center gap-1.5">
-                <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-violet-400/15">
+                <div className="h-1.5 flex-1 overflow-hidden rounded-full nt-track">
                   <div className="h-full rounded-full" style={{ width: `${Math.min(100, c.progress)}%`, background: `linear-gradient(90deg, ${NEON.violet}, ${NEON.cyan})`, boxShadow: `0 0 8px ${NEON.violet}` }} />
                 </div>
-                <span className="w-9 text-right text-[10px] tabular-nums text-violet-100">{c.progress.toFixed(0)}%</span>
+                <span className="w-9 text-right text-[10px] tabular-nums nt-1">{c.progress.toFixed(0)}%</span>
               </div>
               <span className="text-[11px] font-semibold tabular-nums" style={{ color: c.successRate >= 60 ? NEON.green : c.successRate >= 30 ? NEON.amber : NEON.red }}>
                 {c.successRate.toFixed(1)}%
@@ -427,13 +428,13 @@ function MapPanel({ d }: { d: AnalyticsData }) {
     <NPanel title="Global Connectivity Map" className="flex-1" right={<span className="nchip">{MAP_HUB.label}</span>}>
       <WorldMap routes={routes} />
       {d.network.providers.length === 0 ? (
-        <div className="mt-2 text-[10px] text-violet-200/60">Is range me koi provider usage log nahi — pehli call ke baad routes yahan dikhenge.</div>
+        <div className="mt-2 text-[10px] nt-3">Is range me koi provider usage log nahi — pehli call ke baad routes yahan dikhenge.</div>
       ) : (
-        <div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 text-[10px] text-violet-200/80 sm:grid-cols-3">
+        <div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 text-[10px] nt-3 sm:grid-cols-3">
           {d.network.providers.map((p) => (
-            <div key={`${p.kind}-${p.name}`} className="flex items-center justify-between gap-2 border-b border-violet-400/10 pb-0.5">
+            <div key={`${p.kind}-${p.name}`} className="flex items-center justify-between gap-2 border-b nt-b1 pb-0.5">
               <span className="truncate">
-                <b className="text-violet-100">{p.name}</b> · {p.kind.toLowerCase().replace("_", " ")}
+                <b className="nt-1">{p.name}</b> · {p.kind.toLowerCase().replace("_", " ")}
               </span>
               <span className="tabular-nums">{nf(p.count)} · ₹{p.cost.toFixed(1)}</span>
             </div>
@@ -449,7 +450,7 @@ function MapPanel({ d }: { d: AnalyticsData }) {
           ))}
         </div>
       )}
-      <div className="mt-1 text-[9px] text-violet-300/50">Provider regions approximate hain (provider ke primary hosting region ke hisaab se).</div>
+      <div className="mt-1 text-[9px] nt-3">Provider regions approximate hain (provider ke primary hosting region ke hisaab se).</div>
     </NPanel>
   );
 }
@@ -462,10 +463,10 @@ function AlertsStrip({ alerts }: { alerts: AlertRow[] }) {
         <div
           key={a.key}
           className={`flex items-start gap-2 rounded-lg border px-3 py-2 text-[11px] ${
-            a.severity === "critical" ? "border-red-400/40 bg-red-500/10 text-red-100" : "border-amber-400/40 bg-amber-500/10 text-amber-100"
+            a.severity === "critical" ? "nt-bd-red nt-bg-red nt-red" : "nt-bd-amber nt-bg-amber nt-amber"
           }`}
         >
-          <AlertTriangle size={14} className={a.severity === "critical" ? "mt-0.5 text-red-300" : "mt-0.5 text-amber-300"} />
+          <AlertTriangle size={14} className={a.severity === "critical" ? "mt-0.5 nt-red" : "mt-0.5 nt-amber"} />
           <div>
             <b>{a.title}</b> — <span className="opacity-90">{a.body}</span>
           </div>
@@ -477,7 +478,7 @@ function AlertsStrip({ alerts }: { alerts: AlertRow[] }) {
 
 function Delta({ value, invert = false }: { value: number | null | undefined; invert?: boolean }) {
   if (value === undefined) return null;
-  if (value === null) return <span className="text-[10px] text-violet-300/60">naya</span>;
+  if (value === null) return <span className="text-[10px] nt-3">naya</span>;
   const good = invert ? value <= 0 : value >= 0;
   const Icon = value >= 0 ? ArrowUpRight : ArrowDownRight;
   return (
@@ -505,10 +506,10 @@ function KpiStrip({ d }: { d: AnalyticsData }) {
         .map((i) => (
           <NPanel key={i.label} title={i.label}>
             <div className="flex items-end justify-between gap-2">
-              <div className="text-xl font-bold tabular-nums text-white">{i.value}</div>
+              <div className="text-xl font-bold tabular-nums nt-1">{i.value}</div>
               <Delta value={i.delta} invert={i.invert} />
             </div>
-            <div className="mt-0.5 text-[9px] text-violet-300/60">pichhla period: {i.prev}</div>
+            <div className="mt-0.5 text-[9px] nt-3">pichhla period: {i.prev}</div>
           </NPanel>
         ))}
     </div>
@@ -522,19 +523,19 @@ function RoiPanel({ d }: { d: AnalyticsData }) {
     <NPanel title="Cost vs Collection" right={<span className="nchip">{d.rangeLabel}</span>}>
       <div className="grid grid-cols-3 gap-2 text-center">
         <div>
-          <div className="text-[9px] uppercase text-violet-300/60">Collected</div>
+          <div className="text-[9px] uppercase nt-3">Collected</div>
           <div className="text-sm font-bold tabular-nums" style={{ color: NEON.green }}>{formatInrClient(r.collected)}</div>
         </div>
         <div>
-          <div className="text-[9px] uppercase text-violet-300/60">Call cost</div>
+          <div className="text-[9px] uppercase nt-3">Call cost</div>
           <div className="text-sm font-bold tabular-nums" style={{ color: NEON.amber }}>₹{r.cost.toFixed(0)}</div>
         </div>
         <div>
-          <div className="text-[9px] uppercase text-violet-300/60">Net</div>
+          <div className="text-[9px] uppercase nt-3">Net</div>
           <div className="text-sm font-bold tabular-nums" style={{ color: r.net >= 0 ? NEON.cyan : NEON.red }}>{formatInrClient(r.net)}</div>
         </div>
       </div>
-      <div className="mt-2 rounded-lg border border-violet-400/15 bg-violet-950/40 px-2 py-1.5 text-center text-[11px] text-violet-100">
+      <div className="mt-2 rounded-lg border nt-b1 nt-surface px-2 py-1.5 text-center text-[11px] nt-1">
         {r.ratio === null ? "Abhi koi call cost record nahi hai." : <>Har <b>₹1</b> kharch par <b style={{ color: NEON.green }}>₹{r.ratio}</b> wapas aaya</>}
       </div>
     </NPanel>
@@ -557,22 +558,22 @@ function LivePanel({ calls }: { calls: LiveCall[] }) {
         <ul className="space-y-2">
           {calls.map((c) => (
             <li key={c.id}>
-              <Link href={`/calls/${c.id}`} className="block rounded-lg border border-cyan-400/20 bg-cyan-500/5 p-2 transition hover:border-cyan-400/50">
+              <Link href={`/calls/${c.id}`} className="block rounded-lg border nt-bd-cyan nt-bg-cyan p-2 transition nt-card-hover">
                 <div className="flex items-center justify-between gap-2 text-[11px]">
-                  <span className="truncate font-semibold text-violet-50">{c.customer}</span>
-                  <span className="shrink-0 tabular-nums text-cyan-300">
+                  <span className="truncate font-semibold nt-1">{c.customer}</span>
+                  <span className="shrink-0 tabular-nums nt-cyan">
                     {Math.floor(c.seconds / 60)}:{String(c.seconds % 60).padStart(2, "0")}
                   </span>
                 </div>
-                <div className="mt-0.5 flex flex-wrap gap-1.5 text-[9px] text-violet-300/70">
+                <div className="mt-0.5 flex flex-wrap gap-1.5 text-[9px] nt-3">
                   <span>{c.status === "RINGING" ? "● Ringing" : "● In conversation"}</span>
                   <span>{c.mode}</span>
                   {c.campaign && <span>· {c.campaign.name}</span>}
                 </div>
                 {c.lines.length > 0 && (
-                  <div className="mt-1 space-y-0.5 border-l-2 border-violet-400/30 pl-2 text-[10px] leading-snug">
+                  <div className="mt-1 space-y-0.5 border-l-2 nt-b2 pl-2 text-[10px] leading-snug">
                     {c.lines.map((l, i) => (
-                      <div key={i} className={l.speaker === "AI" ? "text-violet-200" : "text-emerald-200"}>
+                      <div key={i} className={l.speaker === "AI" ? "nt-2" : "nt-green"}>
                         <b>{l.speaker === "AI" ? "AI" : l.speaker === "CUSTOMER" ? "Customer" : "System"}:</b> {l.text}
                       </div>
                     ))}
@@ -610,15 +611,15 @@ function DrillModal({ drill, onClose }: { drill: { query: string; title: string 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={onClose} role="dialog" aria-modal="true" aria-label={drill.title}>
       <div className="npanel max-h-[80vh] w-full max-w-2xl overflow-hidden !p-0" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center justify-between border-b border-violet-400/20 px-4 py-3">
+        <div className="flex items-center justify-between border-b nt-b1 px-4 py-3">
           <h3 className="npanel-title">{drill.title}</h3>
-          <button onClick={onClose} className="rounded p-1 text-violet-200 hover:bg-violet-500/20" aria-label="Close">
+          <button onClick={onClose} className="rounded p-1 nt-2 nt-icon-hover" aria-label="Close">
             <X size={14} />
           </button>
         </div>
         <div className="max-h-[calc(80vh-3.5rem)] overflow-y-auto p-3">
-          {err && <div className="text-xs text-red-300">{err}</div>}
-          {!rows && !err && <div className="py-8 text-center text-xs text-violet-200/60">Loading…</div>}
+          {err && <div className="text-xs nt-red">{err}</div>}
+          {!rows && !err && <div className="py-8 text-center text-xs nt-3">Loading…</div>}
           {rows && rows.length === 0 && <Empty text="Is slot me koi call nahi mili." />}
           {rows && rows.length > 0 && (
             <ul className="space-y-1.5">
@@ -626,13 +627,13 @@ function DrillModal({ drill, onClose }: { drill: { query: string; title: string 
                 const st = STATUS_STYLE[c.status] ?? { color: NEON.slate, label: c.status };
                 return (
                   <li key={c.id}>
-                    <Link href={`/calls/${c.id}`} className="flex items-center gap-3 rounded-lg border border-violet-400/10 bg-violet-950/30 px-3 py-2 text-[11px] hover:border-violet-400/40">
+                    <Link href={`/calls/${c.id}`} className="flex items-center gap-3 rounded-lg border nt-b1 nt-surface px-3 py-2 text-[11px] nt-card-hover">
                       <div className="min-w-0 flex-1">
-                        <div className="truncate font-semibold text-violet-50">{c.customer.name}</div>
-                        <div className="truncate text-[10px] text-violet-300/70">{c.summary || c.customer.phoneNumber}</div>
+                        <div className="truncate font-semibold nt-1">{c.customer.name}</div>
+                        <div className="truncate text-[10px] nt-3">{c.summary || c.customer.phoneNumber}</div>
                       </div>
                       <span style={{ color: st.color }} className="shrink-0 text-[10px]">● {st.label}</span>
-                      <span className="shrink-0 text-[10px] text-violet-300/60">{timeAgo(c.createdAt)}</span>
+                      <span className="shrink-0 text-[10px] nt-3">{timeAgo(c.createdAt)}</span>
                     </Link>
                   </li>
                 );
@@ -653,7 +654,7 @@ function Avatar({ name, tone = NEON.violet }: { name: string; tone?: string }) {
     .slice(0, 2)
     .toUpperCase();
   return (
-    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[9px] font-bold text-white" style={{ background: `linear-gradient(135deg, ${tone}, #4c1d95)` }}>
+    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[9px] font-bold text-white" style={{ background: `linear-gradient(135deg, color-mix(in srgb, ${tone} 55%, #1e1b4b), #4c1d95)` }}>
       {initials || <UserIcon size={11} />}
     </span>
   );
@@ -665,7 +666,7 @@ function TrackerPanel({ d }: { d: AnalyticsData }) {
       <div className="overflow-x-auto">
         <table className="w-full text-[10px]">
           <thead>
-            <tr className="text-left text-[9px] uppercase tracking-wide text-violet-300/60">
+            <tr className="text-left text-[9px] uppercase tracking-wide nt-3">
               <th className="pb-1 font-medium">Agent</th>
               <th className="pb-1 text-right font-medium">Calls</th>
               <th className="pb-1 text-right font-medium">Tasks</th>
@@ -673,36 +674,36 @@ function TrackerPanel({ d }: { d: AnalyticsData }) {
             </tr>
           </thead>
           <tbody>
-            <tr className="border-t border-violet-400/10">
+            <tr className="border-t nt-b1">
               <td className="py-1.5">
                 <div className="flex items-center gap-1.5">
                   <span className="flex h-6 w-6 items-center justify-center rounded-full" style={{ background: `linear-gradient(135deg, ${NEON.cyan}, #4c1d95)` }}>
                     <Bot size={12} className="text-white" />
                   </span>
                   <div>
-                    <div className="font-semibold text-violet-50">AI Voice Agent</div>
-                    <div className="text-[9px] text-violet-300/60">{d.ai.avgConfidence}% confidence</div>
+                    <div className="font-semibold nt-1">AI Voice Agent</div>
+                    <div className="text-[9px] nt-3">{d.ai.avgConfidence}% confidence</div>
                   </div>
                 </div>
               </td>
-              <td className="py-1.5 text-right tabular-nums text-violet-100">{nf(d.ai.callsHandled)}</td>
-              <td className="py-1.5 text-right text-violet-300/50">—</td>
-              <td className="py-1.5 text-right text-violet-300/50">—</td>
+              <td className="py-1.5 text-right tabular-nums nt-1">{nf(d.ai.callsHandled)}</td>
+              <td className="py-1.5 text-right nt-3">—</td>
+              <td className="py-1.5 text-right nt-3">—</td>
             </tr>
             {d.agents.map((a, i) => (
-              <tr key={a.id} className="border-t border-violet-400/10">
+              <tr key={a.id} className="border-t nt-b1">
                 <td className="py-1.5">
                   <div className="flex items-center gap-1.5">
                     <Avatar name={a.name} tone={i === 0 && a.collected > 0 ? NEON.amber : NEON.violet} />
                     <div className="min-w-0">
-                      <div className="truncate font-semibold text-violet-50">{a.name}</div>
-                      <div className="text-[9px] text-violet-300/60">{a.role.toLowerCase()}</div>
+                      <div className="truncate font-semibold nt-1">{a.name}</div>
+                      <div className="text-[9px] nt-3">{a.role.toLowerCase()}</div>
                     </div>
                   </div>
                 </td>
-                <td className="py-1.5 text-right tabular-nums text-violet-100">{a.callsInitiated}</td>
-                <td className="py-1.5 text-right tabular-nums text-violet-100">{a.tasksResolved}</td>
-                <td className="py-1.5 text-right tabular-nums text-violet-100">
+                <td className="py-1.5 text-right tabular-nums nt-1">{a.callsInitiated}</td>
+                <td className="py-1.5 text-right tabular-nums nt-1">{a.tasksResolved}</td>
+                <td className="py-1.5 text-right tabular-nums nt-1">
                   <span className="inline-flex items-center gap-1">
                     {formatInrClient(a.collected)}
                     {i < 3 && a.collected > 0 && <Trophy size={11} style={{ color: i === 0 ? NEON.amber : i === 1 ? "#cbd5e1" : "#d97706" }} />}
@@ -743,19 +744,19 @@ function TimelinePanel({ d, limit = 6 }: { d: AnalyticsData; limit?: number }) {
             const missed = c.status === "NO_ANSWER" || c.status === "BUSY" || c.status === "FAILED";
             return (
               <li key={c.id}>
-                <Link href={`/calls/${c.id}`} className="flex gap-2 rounded-lg border border-violet-400/10 bg-violet-950/30 p-2 transition hover:border-violet-400/40">
-                  <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full" style={{ background: `${st.color}22`, color: st.color }}>
+                <Link href={`/calls/${c.id}`} className="flex gap-2 rounded-lg border nt-b1 nt-surface p-2 transition nt-card-hover">
+                  <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full" style={{ background: tint(st.color), color: st.color }}>
                     {missed ? <PhoneMissed size={12} /> : <Phone size={12} />}
                   </span>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center justify-between gap-2">
-                      <span className="truncate text-[11px] font-semibold text-violet-50">{c.customer}</span>
-                      <span className="shrink-0 text-[9px] text-violet-300/60">{timeAgo(c.createdAt)}</span>
+                      <span className="truncate text-[11px] font-semibold nt-1">{c.customer}</span>
+                      <span className="shrink-0 text-[9px] nt-3">{timeAgo(c.createdAt)}</span>
                     </div>
-                    <div className="line-clamp-2 text-[10px] leading-snug text-violet-200/75">{c.summary || "Summary available nahi."}</div>
+                    <div className="line-clamp-2 text-[10px] leading-snug nt-3">{c.summary || "Summary available nahi."}</div>
                     <div className="mt-0.5 flex gap-2 text-[9px]">
                       <span style={{ color: st.color }}>● {st.label}</span>
-                      {c.duration != null && <span className="text-violet-300/60">{c.duration}s</span>}
+                      {c.duration != null && <span className="nt-3">{c.duration}s</span>}
                     </div>
                   </div>
                 </Link>
@@ -774,7 +775,7 @@ function TrendsPanel({ d }: { d: AnalyticsData }) {
     <NPanel title="Performance Trend Graphs">
       <div className="grid gap-4 md:grid-cols-3">
         <div>
-          <div className="mb-1 text-[10px] font-medium text-violet-200">Monthly Call Volume Trend</div>
+          <div className="mb-1 text-[10px] font-medium nt-2">Monthly Call Volume Trend</div>
           <BarChart
             labels={t.monthly.labels}
             series={[
@@ -784,7 +785,7 @@ function TrendsPanel({ d }: { d: AnalyticsData }) {
           />
         </div>
         <div>
-          <div className="mb-1 text-[10px] font-medium text-violet-200">Agent Efficiency Trends (weekly)</div>
+          <div className="mb-1 text-[10px] font-medium nt-2">Agent Efficiency Trends (weekly)</div>
           <BarChart
             labels={t.efficiency.labels}
             series={[
@@ -797,7 +798,7 @@ function TrendsPanel({ d }: { d: AnalyticsData }) {
           />
         </div>
         <div>
-          <div className="mb-1 text-[10px] font-medium text-violet-200">System Load Forecast</div>
+          <div className="mb-1 text-[10px] font-medium nt-2">System Load Forecast</div>
           <LineAreaChart
             height={130}
             labels={t.forecast.labels}
@@ -807,7 +808,7 @@ function TrendsPanel({ d }: { d: AnalyticsData }) {
               { name: "Planned follow-ups", color: NEON.cyan, dashed: true, values: [...new Array<null>(6).fill(null), ...t.forecast.planned] },
             ]}
           />
-          {t.forecast.overdueBacklog > 0 && <div className="text-[9px] text-amber-300/80">+{t.forecast.overdueBacklog} overdue follow-ups aaj ke load me joda gaya.</div>}
+          {t.forecast.overdueBacklog > 0 && <div className="text-[9px] nt-amber">+{t.forecast.overdueBacklog} overdue follow-ups aaj ke load me joda gaya.</div>}
         </div>
       </div>
     </NPanel>
@@ -843,9 +844,9 @@ function CustomersView({ d }: { d: AnalyticsData }) {
         <NPanel
           title="Outstanding Customers & Payment Risk"
           right={
-            <div className="flex overflow-hidden rounded-md border border-violet-400/30 text-[10px]">
+            <div className="flex overflow-hidden rounded-md border nt-b2 text-[10px]">
               {(["risk", "amount"] as const).map((m) => (
-                <button key={m} onClick={() => setSort(m)} className={`px-2 py-0.5 ${sort === m ? "bg-violet-600 text-white" : "text-violet-200"}`}>
+                <button key={m} onClick={() => setSort(m)} className={`px-2.5 py-1.5 ${sort === m ? "nt-toggle-on" : "nt-2"}`}>
                   {m === "risk" ? "Risk" : "Amount"}
                 </button>
               ))}
@@ -857,7 +858,7 @@ function CustomersView({ d }: { d: AnalyticsData }) {
           ) : (
             <table className="w-full text-[11px]">
               <thead>
-                <tr className="text-left text-[9px] uppercase tracking-wide text-violet-300/60">
+                <tr className="text-left text-[9px] uppercase tracking-wide nt-3">
                   <th className="pb-1 font-medium">Customer</th>
                   <th className="pb-1 text-right font-medium">Outstanding</th>
                   <th className="pb-1 text-right font-medium">Risk</th>
@@ -865,17 +866,17 @@ function CustomersView({ d }: { d: AnalyticsData }) {
               </thead>
               <tbody>
                 {rows.map((r) => (
-                  <tr key={r.id} className="border-t border-violet-400/10 align-top">
+                  <tr key={r.id} className="border-t nt-b1 align-top">
                     <td className="py-1.5">
-                      <Link href={`/customers/${r.id}`} className="font-semibold text-violet-50 hover:underline">
+                      <Link href={`/customers/${r.id}`} className="font-semibold nt-1 hover:underline">
                         {r.name}
                       </Link>
-                      {r.doNotCall && <span className="ml-1.5 rounded bg-red-500/20 px-1 text-[9px] text-red-300">DNC</span>}
-                      <div className="text-[9px] text-violet-300/60">{r.risk.reasons.length ? r.risk.reasons.join(" · ") : r.phone}</div>
+                      {r.doNotCall && <span className="ml-1.5 rounded nt-bg-red2 px-1 text-[9px] nt-red">DNC</span>}
+                      <div className="text-[9px] nt-3">{r.risk.reasons.length ? r.risk.reasons.join(" · ") : r.phone}</div>
                     </td>
-                    <td className="py-1.5 text-right font-semibold tabular-nums text-pink-300">{formatInrClient(r.outstanding)}</td>
+                    <td className="py-1.5 text-right font-semibold tabular-nums nt-pink">{formatInrClient(r.outstanding)}</td>
                     <td className="py-1.5 text-right">
-                      <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold" style={{ color: levelColor[r.risk.level], background: `${levelColor[r.risk.level]}22` }} title={`Score ${r.risk.score}/100`}>
+                      <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold" style={{ color: levelColor[r.risk.level], background: tint(levelColor[r.risk.level]) }} title={`Score ${r.risk.score}/100`}>
                         {r.risk.level} · {r.risk.score}
                       </span>
                     </td>
@@ -884,17 +885,17 @@ function CustomersView({ d }: { d: AnalyticsData }) {
               </tbody>
             </table>
           )}
-          <div className="mt-2 text-[9px] text-violet-300/50">Risk = toote promises, phone na uthana, payment ko kitne din hue aur balance ka size — ek simple heuristic, prediction nahi.</div>
+          <div className="mt-2 text-[9px] nt-3">Risk = toote promises, phone na uthana, payment ko kitne din hue aur balance ka size — ek simple heuristic, prediction nahi.</div>
         </NPanel>
         <NPanel title="Preferred Language">
           <div className="space-y-2">
             {c.languages.map((l) => (
               <div key={l.language}>
-                <div className="flex justify-between text-[10px] text-violet-100">
+                <div className="flex justify-between text-[10px] nt-1">
                   <span className="capitalize">{l.language}</span>
                   <span className="tabular-nums">{l.count}</span>
                 </div>
-                <div className="h-1.5 overflow-hidden rounded-full bg-violet-400/15">
+                <div className="h-1.5 overflow-hidden rounded-full nt-track">
                   <div className="h-full rounded-full" style={{ width: `${(l.count / langMax) * 100}%`, background: `linear-gradient(90deg, ${NEON.violet}, ${NEON.pink})` }} />
                 </div>
               </div>
@@ -917,8 +918,8 @@ function ReportsView({ d, query }: { d: AnalyticsData; query: string }) {
     <div className="grid gap-3 md:grid-cols-3">
       {items.map((it) => (
         <NPanel key={it.type} title={it.title}>
-          <p className="mb-3 text-[11px] text-violet-200/75">{it.desc}</p>
-          <div className="mb-3 text-2xl font-bold tabular-nums text-white">{nf(it.count)}</div>
+          <p className="mb-3 text-[11px] nt-3">{it.desc}</p>
+          <div className="mb-3 text-2xl font-bold tabular-nums nt-1">{nf(it.count)}</div>
           <div className="flex flex-wrap gap-2">
             <a href={`/api/analytics/export?type=${it.type}&format=xlsx&${query}`} className={btn}>
               <FileSpreadsheet size={12} /> Excel
@@ -930,13 +931,13 @@ function ReportsView({ d, query }: { d: AnalyticsData; query: string }) {
         </NPanel>
       ))}
       <NPanel title="Management summary (PDF)">
-        <p className="mb-3 text-[11px] text-violet-200/75">KPIs, call outcomes, staff performance{money ? " aur top outstanding customers (risk ke saath)" : ""} — ek page ka PDF.</p>
+        <p className="mb-3 text-[11px] nt-3">KPIs, call outcomes, staff performance{money ? " aur top outstanding customers (risk ke saath)" : ""} — ek page ka PDF.</p>
         <a href={`/api/analytics/export?type=summary&format=pdf&${query}`} className={btn}>
           <FileText size={12} /> PDF download
         </a>
       </NPanel>
       <NPanel title="Print this page">
-        <p className="mb-3 text-[11px] text-violet-200/75">Poora dashboard print karo ya browser ke print dialog se PDF me save karo.</p>
+        <p className="mb-3 text-[11px] nt-3">Poora dashboard print karo ya browser ke print dialog se PDF me save karo.</p>
         <button className="nbtn inline-flex items-center gap-1.5" onClick={() => window.print()}>
           <Printer size={12} /> Print
         </button>
@@ -1083,7 +1084,7 @@ export default function AnalyticsPage() {
             </button>
           ))}
         </nav>
-        <div className="flex flex-wrap items-center gap-2 text-[11px] text-violet-200/80">
+        <div className="flex flex-wrap items-center gap-2 text-[11px] nt-3">
           {data && (
             <span className="nchip" title="TEST mode me calls simulate hoti hain">
               <Activity size={11} className="mr-1 inline" />
@@ -1111,8 +1112,8 @@ export default function AnalyticsPage() {
         </div>
       </div>
 
-      {range === "custom" && to < from && <div className="mb-3 rounded-lg border border-amber-400/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-100">“To” date “From” se pehle nahi ho sakti.</div>}
-      {error && <div className="mb-3 rounded-lg border border-red-400/30 bg-red-500/10 px-3 py-2 text-xs text-red-200">{error}</div>}
+      {range === "custom" && to < from && <div className="mb-3 rounded-lg border nt-bd-amber nt-bg-amber px-3 py-2 text-xs nt-amber">“To” date “From” se pehle nahi ho sakti.</div>}
+      {error && <div className="mb-3 rounded-lg border nt-bd-red nt-bg-red px-3 py-2 text-xs nt-red">{error}</div>}
       {data && <AlertsStrip alerts={data.alerts} />}
       {data && <KpiStrip d={data} />}
 

@@ -21,8 +21,9 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({ notifications });
 }
 
-const Schema = z.object({ id: z.string().min(1) });
+const Schema = z.union([z.object({ id: z.string().min(1) }), z.object({ all: z.literal(true) })]);
 
+/** `{ id }` marks one notification read; `{ all: true }` marks every unread dashboard notification read. */
 export async function PATCH(req: NextRequest) {
   try {
     await requireSession();
@@ -31,11 +32,15 @@ export async function PATCH(req: NextRequest) {
   }
   const body = await req.json().catch(() => null);
   const parsed = Schema.safeParse(body);
-  if (!parsed.success) return NextResponse.json({ error: "id is required." }, { status: 400 });
+  if (!parsed.success) return NextResponse.json({ error: "id or all:true is required." }, { status: 400 });
 
-  const notification = await db.notification.update({
-    where: { id: parsed.data.id },
-    data: { readAt: new Date() },
-  });
+  if ("all" in parsed.data) {
+    const { count } = await db.notification.updateMany({ where: { channel: "DASHBOARD", readAt: null }, data: { readAt: new Date() } });
+    return NextResponse.json({ updated: count });
+  }
+
+  const existing = await db.notification.findUnique({ where: { id: parsed.data.id }, select: { id: true } });
+  if (!existing) return NextResponse.json({ error: "Notification not found." }, { status: 404 });
+  const notification = await db.notification.update({ where: { id: parsed.data.id }, data: { readAt: new Date() } });
   return NextResponse.json({ notification });
 }

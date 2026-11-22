@@ -150,11 +150,11 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
       </div>
 
       {customer.doNotCall && (
-        <div className="text-xs text-red-300 bg-red-500/10 border border-red-500/30 rounded-lg p-3">
+        <div className="text-xs text-[var(--danger-text)] bg-red-500/10 border border-red-500/30 rounded-lg p-3">
           DO_NOT_CALL active{customer.doNotCallReason ? `: ${customer.doNotCallReason}` : ""}. Automated calls blocked hain jab tak staff isse hatata nahi.
         </div>
       )}
-      {error && <div className="text-xs text-red-300 bg-red-500/10 border border-red-500/30 rounded-lg p-3">{error}</div>}
+      {error && <div className="text-xs text-[var(--danger-text)] bg-red-500/10 border border-red-500/30 rounded-lg p-3">{error}</div>}
 
       <div className="grid md:grid-cols-3 gap-4">
         <Panel>
