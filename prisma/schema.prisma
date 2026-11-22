@@ -1,0 +1,642 @@
+// AI Voice Calling + Credit/Collection Automation — per-client deployment template.
+// The business name shown to users/customers is AppSettings.businessName, not
+// hardcoded here — each client deployment sets its own via Settings.
+// Relational schema. Money is Decimal(12,2) INR. Dates/times are stored UTC;
+// the app layer renders/interprets them in Asia/Kolkata (see src/lib/time.ts).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Enums
+// ---------------------------------------------------------------------------
+
+enum Role {
+  OWNER
+  ADMIN
+  STAFF
+}
+
+enum AppMode {
+  TEST
+  PRODUCTION
+}
+
+enum CallStatus {
+  QUEUED
+  RINGING
+  CONNECTED
+  NO_ANSWER
+  BUSY
+  FAILED
+  COMPLETED
+  AI_UNCERTAIN
+  CALLBACK_REQUESTED
+  WRONG_NUMBER
+}
+
+enum PaymentIntent {
+  WILL_PAY
+  PARTIAL_PAY
+  CANNOT_PAY
+  ALREADY_PAID
+  REFUSED
+  CALLBACK_REQUESTED
+  WRONG_NUMBER
+  UNCLEAR
+}
+
+enum PromiseStatus {
+  ACTIVE
+  FULFILLED
+  BROKEN
+  SUPERSEDED
+  CANCELLED
+}
+
+enum UsageProvider {
+  TELEPHONY
+  STT
+  LLM
+  TTS
+  CUSTOM_VOICE
+}
+
+enum StaffTaskType {
+  PAYMENT_VERIFICATION_REQUIRED
+  AI_UNCERTAIN_REVIEW
+  CALLBACK_REQUEST
+  WRONG_NUMBER_REVIEW
+  ANGRY_CUSTOMER_REVIEW
+  BROKEN_PROMISE_REVIEW
+  GENERAL
+}
+
+enum StaffTaskStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+}
+
+enum TestVerdict {
+  UNREVIEWED
+  PASS
+  FAIL
+  NEEDS_REVIEW
+}
+
+enum FollowUpStatus {
+  PENDING
+  COMPLETED
+  CANCELLED
+}
+
+enum Speaker {
+  AI
+  CUSTOMER
+  SYSTEM
+}
+
+enum NotificationChannel {
+  DASHBOARD
+  WHATSAPP_STUB
+  SMS_STUB
+}
+
+enum NotificationStatus {
+  PENDING
+  SENT
+  FAILED
+}
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  CONFIRM
+  CANCEL
+  MARK_FULFILLED
+  MARK_BROKEN
+  RECORD_PAYMENT
+}
+
+enum ActorType {
+  AI
+  STAFF
+  SYSTEM
+}
+
+enum OrderStatus {
+  OPEN
+  PAID
+  CANCELLED
+}
+
+enum CampaignStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+  COMPLETED
+}
+
+enum ReminderChannel {
+  WHATSAPP
+  SMS
+}
+
+enum ReminderKind {
+  DUE_REMINDER
+  OVERDUE_REMINDER
+  BROKEN_PROMISE_ALERT
+  BILL_RECEIPT
+  PAYMENT_RECEIPT
+}
+
+// ---------------------------------------------------------------------------
+// Auth
+// ---------------------------------------------------------------------------
+
+model User {
+  id             String   @id @default(cuid())
+  name           String
+  email          String   @unique
+  passwordHash   String
+  role           Role     @default(STAFF)
+  isActive       Boolean  @default(true)
+  whatsappNumber String? // owner's number, for AI-call-report / dashboard-alert delivery
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  languageTests   LanguageTest[]
+  assignedTasks   StaffTask[]      @relation("AssignedTasks")
+  resolvedTasks   StaffTask[]      @relation("ResolvedTasks")
+  auditLogs       AuditLog[]
+  createdOrders   Order[]          @relation("OrderCreatedBy")
+  cashCollections CashCollection[] @relation("CashCollectedBy")
+  campaigns       Campaign[]       @relation("CampaignCreatedBy")
+}
+
+// ---------------------------------------------------------------------------
+// Customer
+// ---------------------------------------------------------------------------
+
+model Customer {
+  id                String    @id @default(cuid())
+  name              String
+  phoneNumber       String    @unique
+  whatsappNumber    String? // falls back to phoneNumber when unset
+  address           String?
+  outstandingAmount Decimal   @default(0) @db.Decimal(12, 2)
+  lastPaymentDate   DateTime?
+  lastPromiseDate   DateTime?
+  lastPromiseAmount Decimal?  @db.Decimal(12, 2)
+  preferredLanguage String    @default("hinglish") // hindi | hinglish | magahi (alias: begusarai) | english | other
+  doNotCall         Boolean   @default(false)
+  doNotCallReason   String?
+  doNotCallSetAt    DateTime?
+  notes             String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  calls           Call[]
+  promises        PromiseToPay[]
+  followUps       FollowUp[]
+  staffTasks      StaffTask[]
+  notifications   Notification[]
+  orders          Order[]
+  cashCollections CashCollection[]
+  reminderLogs    ReminderLog[]
+  campaignMembers CampaignMember[]
+
+  @@index([doNotCall])
+}
+
+// ---------------------------------------------------------------------------
+// Call
+// ---------------------------------------------------------------------------
+
+model Call {
+  id         String    @id @default(cuid())
+  customerId String
+  customer   Customer  @relation(fields: [customerId], references: [id])
+  followUpId String?
+  followUp   FollowUp? @relation(fields: [followUpId], references: [id])
+  campaignId String?
+  campaign   Campaign? @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+
+  phoneNumber             String
+  mode                    AppMode    @default(TEST)
+  telephonyProviderCallId String?
+  status                  CallStatus @default(QUEUED)
+  language                String?
+  startedAt               DateTime?
+  endedAt                 DateTime?
+  duration                Int? // seconds
+
+  transcriptText       String? // flattened transcript for quick display
+  summary              String?
+  customerResponse     String?
+  promisedAmount       Decimal?       @db.Decimal(12, 2)
+  promisedDate         DateTime?
+  paymentIntent        PaymentIntent?
+  confidence           Float? // 0..1
+  nextFollowUpDate     DateTime?
+  verificationRequired Boolean        @default(false)
+
+  initiatedByUserId String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  transcripts   CallTranscript[]
+  callSummary   CallSummary?
+  promise       PromiseToPay?
+  usageLogs     CallUsageLog[]
+  staffTasks    StaffTask[]
+  notifications Notification[]
+
+  @@index([customerId])
+  @@index([status])
+  @@index([mode])
+  @@index([campaignId])
+  @@index([createdAt])
+}
+
+model CallTranscript {
+  id        String   @id @default(cuid())
+  callId    String
+  call      Call     @relation(fields: [callId], references: [id], onDelete: Cascade)
+  sequence  Int
+  speaker   Speaker
+  text      String
+  language  String?
+  timestamp DateTime @default(now())
+
+  @@unique([callId, sequence])
+}
+
+model CallSummary {
+  id                    String   @id @default(cuid())
+  callId                String   @unique
+  call                  Call     @relation(fields: [callId], references: [id], onDelete: Cascade)
+  summaryText           String
+  ownerNotificationText String
+  createdAt             DateTime @default(now())
+}
+
+// ---------------------------------------------------------------------------
+// Promise to Pay
+// ---------------------------------------------------------------------------
+
+model PromiseToPay {
+  id         String   @id @default(cuid())
+  callId     String   @unique
+  call       Call     @relation(fields: [callId], references: [id])
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id])
+
+  promisedAmount      Decimal       @db.Decimal(12, 2)
+  promisedDate        DateTime
+  // Set only when this is a partial payment and the customer said when the
+  // rest will be paid ("baaki kab doge") — see callEngine/persist.ts.
+  remainingAmount     Decimal?      @db.Decimal(12, 2)
+  remainingDueDate    DateTime?
+  paymentIntent       PaymentIntent
+  confidence          Float
+  confirmedByCustomer Boolean       @default(false)
+  status              PromiseStatus @default(ACTIVE)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  auditLogs       AuditLog[]
+  cashCollections CashCollection[]
+
+  @@index([customerId])
+  @@index([status])
+}
+
+// ---------------------------------------------------------------------------
+// Usage / cost tracking
+// ---------------------------------------------------------------------------
+
+model CallUsageLog {
+  id              String        @id @default(cuid())
+  callId          String
+  call            Call          @relation(fields: [callId], references: [id], onDelete: Cascade)
+  provider        UsageProvider
+  providerName    String // e.g. "mock", "twilio", "openai" — read from env, never hardcoded logic
+  durationSeconds Int?
+  unitsUsed       Float? // characters / tokens / minutes depending on provider
+  estimatedCost   Decimal       @db.Decimal(10, 4)
+  currency        String        @default("INR")
+  createdAt       DateTime      @default(now())
+
+  @@index([callId])
+  @@index([provider])
+}
+
+// ---------------------------------------------------------------------------
+// Staff tasks (verification, uncertain calls, callbacks, etc.)
+// ---------------------------------------------------------------------------
+
+model StaffTask {
+  id         String          @id @default(cuid())
+  type       StaffTaskType
+  status     StaffTaskStatus @default(OPEN)
+  customerId String
+  customer   Customer        @relation(fields: [customerId], references: [id])
+  callId     String?
+  call       Call?           @relation(fields: [callId], references: [id])
+
+  title       String
+  description String
+
+  assignedToId   String?
+  assignedTo     User?     @relation("AssignedTasks", fields: [assignedToId], references: [id])
+  resolvedById   String?
+  resolvedBy     User?     @relation("ResolvedTasks", fields: [resolvedById], references: [id])
+  resolvedAt     DateTime?
+  resolutionNote String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@index([type])
+  @@index([customerId])
+}
+
+// ---------------------------------------------------------------------------
+// Language testing lab
+// ---------------------------------------------------------------------------
+
+model LanguageTest {
+  id                  String         @id @default(cuid())
+  inputText           String
+  simulatedTranscript String? // for future audio-sample tests, transcript may differ from typed input
+  detectedLanguage    String?
+  extractedAmount     Decimal?       @db.Decimal(12, 2)
+  extractedDate       DateTime?
+  extractedIntent     PaymentIntent?
+  confidence          Float?
+  aiInterpretation    String?
+  verdict             TestVerdict    @default(UNREVIEWED)
+  reviewerNote        String?
+
+  createdById String?
+  createdBy   User?   @relation(fields: [createdById], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([verdict])
+}
+
+// ---------------------------------------------------------------------------
+// Follow-ups (anti-spam attempt tracking lives here)
+// ---------------------------------------------------------------------------
+
+model FollowUp {
+  id            String         @id @default(cuid())
+  customerId    String
+  customer      Customer       @relation(fields: [customerId], references: [id])
+  orderId       String? // optional link to the specific bill this follow-up is chasing
+  order         Order?         @relation(fields: [orderId], references: [id])
+  scheduledDate DateTime
+  reason        String
+  status        FollowUpStatus @default(PENDING)
+  attemptCount  Int            @default(0) // shared cap across WhatsApp + SMS + AI-call attempts
+  maxAttempts   Int            @default(3)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  calls        Call[]
+  reminderLogs ReminderLog[]
+
+  @@index([customerId])
+  @@index([status])
+  @@index([scheduledDate])
+}
+
+// ---------------------------------------------------------------------------
+// Orders & Billing (credit sales — cement/sand/gitti/rod etc.)
+// ---------------------------------------------------------------------------
+
+model Order {
+  id                  String      @id @default(cuid())
+  orderNumber         String      @unique
+  customerId          String
+  customer            Customer    @relation(fields: [customerId], references: [id])
+  orderDate           DateTime    @default(now())
+  totalAmount         Decimal     @db.Decimal(12, 2) // sum of items, computed server-side, immutable after create
+  paidAmount          Decimal     @default(0) @db.Decimal(12, 2) // denormalized cache = sum of linked CashCollections
+  promisedPaymentDate DateTime?
+  status              OrderStatus @default(OPEN) // credit remaining = totalAmount - paidAmount, derived, not stored
+  createdById         String
+  createdBy           User        @relation("OrderCreatedBy", fields: [createdById], references: [id])
+  notes               String?
+  createdAt           DateTime    @default(now())
+  updatedAt           DateTime    @updatedAt
+
+  items           OrderItem[]
+  cashCollections CashCollection[]
+  followUps       FollowUp[]
+  reminderLogs    ReminderLog[]
+
+  @@index([customerId])
+  @@index([status])
+  @@index([orderDate])
+}
+
+model OrderItem {
+  id        String   @id @default(cuid())
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  itemName  String // free text — no product/SKU catalog, by design (no ERP/inventory in scope)
+  quantity  Decimal  @db.Decimal(10, 2)
+  unit      String? // "bag" | "truck" | "kg" | ... — free text
+  rate      Decimal  @db.Decimal(12, 2)
+  amount    Decimal  @db.Decimal(12, 2) // quantity * rate, computed server-side, stored
+  createdAt DateTime @default(now())
+
+  @@index([orderId])
+}
+
+// ---------------------------------------------------------------------------
+// Cash collection — the ONLY staff-writable payment-received table.
+// Deliberately not named "Payment": callEngine/persist.ts's documented
+// invariant is that the AI has no table it could misuse to record money
+// received. This is the human-only counterpart to that absence — AI code
+// must never import this model. See src/app/api/cash-collections/route.ts.
+// ---------------------------------------------------------------------------
+
+model CashCollection {
+  id            String        @id @default(cuid())
+  customerId    String
+  customer      Customer      @relation(fields: [customerId], references: [id])
+  orderId       String? // optional — a general "on account" payment may not target one bill
+  order         Order?        @relation(fields: [orderId], references: [id])
+  amount        Decimal       @db.Decimal(12, 2)
+  collectedAt   DateTime      @default(now())
+  collectedById String
+  collectedBy   User          @relation("CashCollectedBy", fields: [collectedById], references: [id])
+  receiptNumber String        @unique
+  note          String?
+  promiseId     String?
+  promise       PromiseToPay? @relation(fields: [promiseId], references: [id])
+  createdAt     DateTime      @default(now())
+
+  @@index([customerId])
+  @@index([orderId])
+  @@index([collectedAt])
+}
+
+// ---------------------------------------------------------------------------
+// Customer-facing reminder log (WhatsApp/SMS) — kept separate from
+// Notification, which is exclusively the owner-facing dashboard bell.
+// ---------------------------------------------------------------------------
+
+model ReminderLog {
+  id                String             @id @default(cuid())
+  customerId        String
+  customer          Customer           @relation(fields: [customerId], references: [id])
+  followUpId        String?
+  followUp          FollowUp?          @relation(fields: [followUpId], references: [id])
+  orderId           String?
+  order             Order?             @relation(fields: [orderId], references: [id])
+  channel           ReminderChannel
+  kind              ReminderKind
+  status            NotificationStatus @default(PENDING)
+  body              String
+  providerMessageId String?
+  sentAt            DateTime?
+  createdAt         DateTime           @default(now())
+
+  @@index([customerId])
+  @@index([followUpId])
+  @@index([status])
+}
+
+// ---------------------------------------------------------------------------
+// Notifications (provider-independent; dashboard active, WhatsApp/SMS stubs)
+// ---------------------------------------------------------------------------
+
+model Notification {
+  id         String              @id @default(cuid())
+  channel    NotificationChannel
+  status     NotificationStatus  @default(PENDING)
+  customerId String?
+  customer   Customer?           @relation(fields: [customerId], references: [id])
+  callId     String?
+  call       Call?               @relation(fields: [callId], references: [id])
+  title      String
+  body       String
+  readAt     DateTime?
+  createdAt  DateTime            @default(now())
+
+  @@index([status])
+  @@index([channel])
+}
+
+// ---------------------------------------------------------------------------
+// Audit log (every AI-created / modified promise, and other sensitive ops)
+// ---------------------------------------------------------------------------
+
+model AuditLog {
+  id          String      @id @default(cuid())
+  entityType  String // e.g. "PromiseToPay", "Customer", "StaffTask"
+  entityId    String
+  action      AuditAction
+  actorType   ActorType
+  actorUserId String?
+  actorUser   User?       @relation(fields: [actorUserId], references: [id])
+  beforeData  Json?
+  afterData   Json?
+  reason      String?
+  createdAt   DateTime    @default(now())
+
+  promiseId String?
+  promise   PromiseToPay? @relation(fields: [promiseId], references: [id])
+
+  @@index([entityType, entityId])
+}
+
+// ---------------------------------------------------------------------------
+// App settings (single row) — mode switch, anti-spam config, quiet hours
+// ---------------------------------------------------------------------------
+
+model AppSettings {
+  id                      String  @id @default("singleton")
+  mode                    AppMode @default(TEST)
+  businessName            String  @default("Your Business") // shown on login/homepage/nav and spoken by the AI greeting — one deployment per client, so this is what makes each deployment unique
+  businessTagline         String?
+  businessPhone           String? // shown on the login page and printed on Order bills/receipts as the shop's contact number
+  minGapHoursBetweenCalls Int     @default(24)
+  maxAttemptsPerDay       Int     @default(1)
+  maxAttemptsPerPromise   Int     @default(3)
+  quietHoursStart         Int     @default(21) // 9pm
+  quietHoursEnd           Int     @default(9) // 9am
+  timezone                String  @default("Asia/Kolkata")
+
+  // Automated follow-up (WhatsApp/SMS/AI-call) scheduling — distinct cooldown
+  // from minGapHoursBetweenCalls, which only governs AI voice calls.
+  minGapHoursBetweenReminders   Int     @default(24)
+  daysBeforeDueForFirstReminder Int     @default(1)
+  daysOverdueBeforeAiCall       Int     @default(1)
+  reminderChannelsEnabled       String  @default("whatsapp,sms")
+  // Cost control: below this outstanding amount, the scheduler never
+  // escalates to an AI voice call (the most expensive channel) — it keeps
+  // sending WhatsApp/SMS reminders instead. 0 = no threshold, always escalate.
+  minOutstandingForAiCall       Decimal @default(0) @db.Decimal(12, 2)
+
+  // Owner alerts (dashboard bell + WhatsApp) — evaluated by the scheduler.
+  alertMinSuccessRate    Int     @default(90) // % of calls that must not FAIL (last 24h); 0 = off
+  alertMaxBrokenPromises Int     @default(5) // open broken promises before alerting; 0 = off
+  dailyCostLimit         Decimal @default(0) @db.Decimal(12, 2) // INR of call cost per day; 0 = off
+  // End-of-day summary sent to the owner (dashboard + WhatsApp stub channel).
+  dailyReportEnabled     Boolean @default(true)
+  dailyReportHour        Int     @default(21)
+
+  updatedAt DateTime @updatedAt
+}
+
+// ---------------------------------------------------------------------------
+// Campaigns — a named batch of customers worked together (e.g. "Diwali recovery")
+// ---------------------------------------------------------------------------
+
+model Campaign {
+  id          String         @id @default(cuid())
+  name        String
+  description String?
+  status      CampaignStatus @default(DRAFT)
+  startDate   DateTime?
+  endDate     DateTime?
+  createdById String
+  createdBy   User           @relation("CampaignCreatedBy", fields: [createdById], references: [id])
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  members CampaignMember[]
+  calls   Call[]
+
+  @@index([status])
+}
+
+model CampaignMember {
+  id         String   @id @default(cuid())
+  campaignId String
+  campaign   Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id])
+  addedAt    DateTime @default(now())
+
+  @@unique([campaignId, customerId])
+  @@index([customerId])
+}

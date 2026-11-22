@@ -1,0 +1,20 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: aicall
+      POSTGRES_PASSWORD: aicall_dev_pw_2026
+      POSTGRES_DB: maa_chandrakala
+    ports:
+      - "5434:5432"
+    volumes:
+      - aicall_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U aicall -d maa_chandrakala"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  aicall_postgres_data:
