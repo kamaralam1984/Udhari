@@ -6,6 +6,7 @@ import { buildDueReminderMessage, buildOverdueReminderMessage } from "../notific
 import { sendOwnerNotification } from "../notifications/provider";
 import { formatInr } from "../nlu/extract";
 import { formatDateHuman } from "../time";
+import { decideCallTiming, loadSlotStats, type SlotStats } from "./bestTime";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -15,6 +16,8 @@ export interface SweepResult {
   remindersSkipped: number;
   aiCallsPlaced: number;
   aiCallsSkipped: number;
+  /** eligible AI calls held back this tick, waiting for a better pick-up hour (useBestCallTime) */
+  aiCallsDeferred: number;
 }
 
 /**
@@ -23,15 +26,23 @@ export interface SweepResult {
  * every send is gated (canSendReminder / canPlaceCall) so a customer already
  * contacted recently is simply skipped this cycle, not re-contacted.
  */
-export async function runFollowUpSweep(now: Date = new Date()): Promise<SweepResult> {
-  const result: SweepResult = { brokenPromises: 0, remindersSent: 0, remindersSkipped: 0, aiCallsPlaced: 0, aiCallsSkipped: 0 };
+export interface SweepOptions {
+  /** Test hook: use these pick-up stats instead of reading them from the database. */
+  slotStats?: SlotStats;
+  /** Restrict the due-follow-up pass to these customers (used by tests; undefined = everyone). */
+  customerIds?: string[];
+}
+
+export async function runFollowUpSweep(now: Date = new Date(), options: SweepOptions = {}): Promise<SweepResult> {
+  const result: SweepResult = { brokenPromises: 0, remindersSent: 0, remindersSkipped: 0, aiCallsPlaced: 0, aiCallsSkipped: 0, aiCallsDeferred: 0 };
 
   result.brokenPromises = await sweepBrokenPromises(now);
-  const dueResult = await sweepDueFollowUps(now);
+  const dueResult = await sweepDueFollowUps(now, options);
   result.remindersSent = dueResult.remindersSent;
   result.remindersSkipped = dueResult.remindersSkipped;
   result.aiCallsPlaced = dueResult.aiCallsPlaced;
   result.aiCallsSkipped = dueResult.aiCallsSkipped;
+  result.aiCallsDeferred = dueResult.aiCallsDeferred;
 
   return result;
 }
@@ -96,9 +107,11 @@ async function sweepBrokenPromises(now: Date): Promise<number> {
   return overdue.length;
 }
 
-async function sweepDueFollowUps(now: Date) {
-  const result = { remindersSent: 0, remindersSkipped: 0, aiCallsPlaced: 0, aiCallsSkipped: 0 };
+export async function sweepDueFollowUps(now: Date, options: SweepOptions = {}) {
+  const result = { remindersSent: 0, remindersSkipped: 0, aiCallsPlaced: 0, aiCallsSkipped: 0, aiCallsDeferred: 0 };
   const settings = await getAppSettings();
+  // Loaded lazily, once per sweep, and only if some call is actually eligible.
+  let slotStats: SlotStats | null = options.slotStats ?? null;
   const enabledChannels = settings.reminderChannelsEnabled
     .split(",")
     .map((c) => c.trim().toLowerCase())
@@ -111,7 +124,11 @@ async function sweepDueFollowUps(now: Date) {
 
   const windowEnd = new Date(now.getTime() + settings.daysBeforeDueForFirstReminder * DAY_MS);
   const candidates = await db.followUp.findMany({
-    where: { status: "PENDING", scheduledDate: { lte: windowEnd } },
+    where: {
+      status: "PENDING",
+      scheduledDate: { lte: windowEnd },
+      ...(options.customerIds ? { customerId: { in: options.customerIds } } : {}),
+    },
     include: { customer: true, order: true },
     orderBy: { scheduledDate: "asc" },
     take: 200,
@@ -138,6 +155,22 @@ async function sweepDueFollowUps(now: Date) {
     const eligibleForAiCall = daysOverdue >= settings.daysOverdueBeforeAiCall && amount >= Number(settings.minOutstandingForAiCall);
 
     if (eligibleForAiCall) {
+      if (settings.useBestCallTime) {
+        slotStats ??= await loadSlotStats(settings.mode);
+        const timing = decideCallTiming({
+          now,
+          eligibleAt: new Date(followUp.scheduledDate.getTime() + settings.daysOverdueBeforeAiCall * DAY_MS),
+          maxDeferHours: settings.bestCallMaxDeferHours,
+          quietStart: settings.quietHoursStart,
+          quietEnd: settings.quietHoursEnd,
+          stats: slotStats,
+        });
+        if (timing.action === "defer") {
+          // Stays PENDING; re-evaluated next tick. attemptCount is NOT bumped — nothing was attempted.
+          result.aiCallsDeferred++;
+          continue;
+        }
+      }
       const gate = await canPlaceCall(followUp.customerId, now);
       if (!gate.allowed) {
         result.aiCallsSkipped++;

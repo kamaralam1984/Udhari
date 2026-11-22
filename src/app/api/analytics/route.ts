@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { requireSession, authErrorResponse } from "@/lib/auth/guard";
 import { APP_TIMEZONE, startOfDayInAppTz } from "@/lib/time";
 import { getActiveAlerts } from "@/lib/alerts";
+import { getAppSettings } from "@/lib/antiSpam";
 import { campaignStatsMap } from "@/lib/campaigns";
 import {
   bestCallSlots,
@@ -380,6 +381,7 @@ export async function GET(req: Request) {
   const heatTotal = buildHeatmap(heatRows.map((r) => ({ dow: r.dow, hour: r.hour, count: r.count })));
   const heatConnected = buildHeatmap(heatRows.map((r) => ({ dow: r.dow, hour: r.hour, count: r.connected })));
   const bestSlots = bestCallSlots(heatTotal, heatConnected);
+  const schedulerCfg = await getAppSettings();
 
   // ---- trends --------------------------------------------------------------
   const monthLabel = (key: string) => formatInTimeZone(new Date(`${key}T00:00:00Z`), "UTC", "MMM");
@@ -475,6 +477,7 @@ export async function GET(req: Request) {
     heatmap: heatTotal,
     heatmapConnected: heatConnected,
     bestSlots,
+    scheduler: { useBestCallTime: schedulerCfg.useBestCallTime, maxDeferHours: schedulerCfg.bestCallMaxDeferHours },
     flow,
     campaigns,
     agents,

@@ -34,6 +34,7 @@ Sign in at `/login` with the seeded owner account (`SEED_OWNER_EMAIL` / `SEED_OW
 - **`/campaigns`**: a named batch of customers worked together. Start/pause/complete, one "Next call" click per member (TEST calls; PRODUCTION still needs production mode + the anti-spam gate). STAFF can see campaigns but not create or edit them.
 - **Roles**: STAFF never receive money data from the analytics API (no collections, outstanding, ROI or other staff's rows) — enforced server-side in `src/app/api/analytics/`.
 - **Alerts + daily report**: the 15-minute scheduler raises owner notifications (dashboard bell + WhatsApp channel) for a low call success rate, too many broken promises or a daily cost limit (each at most once per 6 h), and sends one end-of-day summary after `dailyReportHour`. Thresholds live in Settings → "Alerts & Daily Report"; `0` switches a rule off.
+- **Best time to call (scheduler)**: Settings → Follow-up Automation → "Best time to call" (off by default). When on, an AI follow-up call that is due is held back while the current hour's pick-up rate is clearly below average (last 60 days of calls in the current mode), and placed in the next better hour outside quiet hours. It calls immediately with < 30 calls of history, and never waits longer than the configured max (default 24 h). Held calls stay `PENDING`, no attempt is consumed; the tick log shows `deferred(best time)`. Logic: `src/lib/followUp/bestTime.ts`.
 - **Themes**: Classic / Neon / Light toggle in the header (per browser).
 
 ## Real calls (Twilio + Bhashini)

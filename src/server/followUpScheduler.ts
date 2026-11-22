@@ -31,7 +31,7 @@ export function startScheduledJobs() {
       console.log(
         `[scheduler] notifications: sent=${dispatch.sent} failed=${dispatch.failed} skipped(no owner number)=${dispatch.skippedNoOwnerNumber} | ` +
           `follow-ups: broken=${sweep.brokenPromises} reminders sent=${sweep.remindersSent} skipped=${sweep.remindersSkipped} ` +
-          `AI calls placed=${sweep.aiCallsPlaced} skipped=${sweep.aiCallsSkipped}`
+          `AI calls placed=${sweep.aiCallsPlaced} skipped=${sweep.aiCallsSkipped} deferred(best time)=${sweep.aiCallsDeferred}`
       );
     } catch (err) {
       console.error("[scheduler] tick failed:", err);

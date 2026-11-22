@@ -604,6 +604,12 @@ model AppSettings {
   dailyReportEnabled     Boolean @default(true)
   dailyReportHour        Int     @default(21)
 
+  // Smart timing: hold an eligible AI follow-up call until a better pick-up
+  // hour (see lib/followUp/bestTime.ts). Off by default — it changes when real
+  // customers get called. Never waits longer than bestCallMaxDeferHours.
+  useBestCallTime       Boolean @default(false)
+  bestCallMaxDeferHours Int     @default(24)
+
   updatedAt DateTime @updatedAt
 }
 

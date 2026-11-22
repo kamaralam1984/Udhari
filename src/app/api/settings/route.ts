@@ -40,6 +40,8 @@ const Schema = z.object({
   dailyCostLimit: z.number().nonnegative().optional(),
   dailyReportEnabled: z.boolean().optional(),
   dailyReportHour: z.number().int().min(0).max(23).optional(),
+  useBestCallTime: z.boolean().optional(),
+  bestCallMaxDeferHours: z.number().int().min(1).max(72).optional(),
 });
 
 /**

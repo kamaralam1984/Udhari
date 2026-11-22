@@ -43,6 +43,8 @@ interface AppSettings {
   dailyCostLimit: string;
   dailyReportEnabled: boolean;
   dailyReportHour: number;
+  useBestCallTime: boolean;
+  bestCallMaxDeferHours: number;
 }
 
 export default function SettingsPage() {
@@ -311,6 +313,22 @@ export default function SettingsPage() {
               value={Number(settings.minOutstandingForAiCall)}
               onSave={(v) => save({ minOutstandingForAiCall: v })}
             />
+            <div className="sm:col-span-2 rounded-lg border border-[var(--panel-border)] p-3">
+              <label className="flex items-center gap-2 text-sm">
+                <input type="checkbox" checked={settings.useBestCallTime} onChange={(e) => save({ useBestCallTime: e.target.checked })} />
+                <span className="font-medium">Best time to call (smart timing)</span>
+              </label>
+              <p className="mt-1 text-xs text-[var(--text-dim)]">
+                ON hone par scheduler AI call tab tak rok leta hai jab tak customers ke phone uthane ka achha ghanta na aa jaye (pichhle 60 din ke pick-up data se). Kam history (30 se kam calls) ho ya ghanta theek ho to call turant lagti hai. Quiet hours me kabhi nahi.
+              </p>
+              <div className="mt-2 max-w-xs">
+                <NumberField
+                  label="Zyada se zyada kitne ghante rukna (1-72)"
+                  value={settings.bestCallMaxDeferHours}
+                  onSave={(v) => save({ bestCallMaxDeferHours: v })}
+                />
+              </div>
+            </div>
           </div>
         </PanelBody>
       </Panel>

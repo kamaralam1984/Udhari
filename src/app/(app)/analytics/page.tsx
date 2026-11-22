@@ -83,6 +83,7 @@ interface AnalyticsData {
   roi: { collected: number; cost: number; ratio: number | null; net: number } | null;
   heatmapConnected: number[][];
   bestSlots: BestSlot[];
+  scheduler: { useBestCallTime: boolean; maxDeferHours: number };
   generatedAt: string;
   live: { concurrent: number; callsToday: number; collectedToday: number; mode: "TEST" | "MIXED" | "PRODUCTION" };
   totals: { total: number; connected: number; missed: number; failed: number; inQueue: number; avgWaitSec: number; fcr: number; avgConfidence: number; promises: number };
@@ -290,6 +291,20 @@ function HeatPanel({ d, drill }: { d: AnalyticsData; drill: DrillOpen }) {
       <div className="mt-2 rounded-lg border border-emerald-400/20 bg-emerald-500/5 px-2 py-1.5 text-[10px] text-emerald-100/90">
         <b className="text-emerald-300">Best time to call:</b>{" "}
         {d.bestSlots.length === 0 ? "abhi kam data hai (har slot me 3+ calls chahiye)." : d.bestSlots.map((b) => bestSlotLabel(b)).join("  |  ")}
+        <div className="mt-1 text-[9px] text-emerald-200/70">
+          Scheduler smart timing:{" "}
+          <b className={d.scheduler.useBestCallTime ? "text-emerald-300" : "text-violet-300/70"}>
+            {d.scheduler.useBestCallTime ? `ON (max ${d.scheduler.maxDeferHours}h wait)` : "OFF"}
+          </b>
+          {d.viewer.scope === "all" && (
+            <>
+              {" · "}
+              <Link href="/settings" className="underline">
+                Settings me badlo
+              </Link>
+            </>
+          )}
+        </div>
       </div>
     </NPanel>
   );

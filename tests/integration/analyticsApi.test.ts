@@ -194,10 +194,21 @@ describe("analytics / campaigns / live-calls APIs", () => {
       expect((await ok.json()).settings.alertMinSuccessRate).toBe(85);
       expect((await send("PATCH", "/api/settings", ownerCookie, { alertMinSuccessRate: 150 })).status).toBe(400);
       expect((await send("PATCH", "/api/settings", ownerCookie, { dailyReportHour: 24 })).status).toBe(400);
+      expect((await send("PATCH", "/api/settings", ownerCookie, { bestCallMaxDeferHours: 0 })).status).toBe(400);
+      expect((await send("PATCH", "/api/settings", ownerCookie, { bestCallMaxDeferHours: 99 })).status).toBe(400);
+      const smart = await send("PATCH", "/api/settings", ownerCookie, { useBestCallTime: true, bestCallMaxDeferHours: 12 });
+      expect(smart.status).toBe(200);
+      expect((await (await get("/api/analytics?range=24h", ownerCookie)).json()).scheduler).toEqual({ useBestCallTime: true, maxDeferHours: 12 });
     } finally {
       await db.appSettings.update({
         where: { id: "singleton" },
-        data: { alertMinSuccessRate: before.alertMinSuccessRate, dailyReportHour: before.dailyReportHour, dailyReportEnabled: before.dailyReportEnabled },
+        data: {
+          alertMinSuccessRate: before.alertMinSuccessRate,
+          dailyReportHour: before.dailyReportHour,
+          dailyReportEnabled: before.dailyReportEnabled,
+          useBestCallTime: before.useBestCallTime,
+          bestCallMaxDeferHours: before.bestCallMaxDeferHours,
+        },
       });
     }
   });
