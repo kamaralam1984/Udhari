@@ -243,7 +243,7 @@ function WaitPanel({ d, drill }: { d: AnalyticsData; drill: DrillOpen }) {
         labels={d.wait.labels}
         series={[{ name: "Wait (sec)", color: NEON.violet, values: d.wait.values }]}
         yFormat={(v) => `${Math.round(v)}s`}
-        unit="s"
+       
         maxLabels={3}
         height={110}
         onSelect={(i) => drill(bucketQuery(d, i, "connected"), `${d.wait.labels[i]} — connected calls`)}
@@ -259,7 +259,7 @@ function FcrPanel({ d, drill }: { d: AnalyticsData; drill: DrillOpen }) {
         labels={d.fcr.labels}
         series={[{ name: "FCR", color: NEON.pink, values: d.fcr.values }]}
         yFormat={(v) => `${Math.round(v)}%`}
-        unit="%"
+       
         maxLabels={3}
         height={110}
         onSelect={(i) => drill(bucketQuery(d, i, "connected"), `${d.fcr.labels[i]} — connected calls`)}
@@ -793,7 +793,7 @@ function TrendsPanel({ d }: { d: AnalyticsData }) {
               { name: "Promise %", color: NEON.pink, values: t.efficiency.promiseRate },
             ]}
             yFormat={(v) => `${Math.round(v)}%`}
-            unit="%"
+           
             maxLabels={4}
           />
         </div>
@@ -802,7 +802,7 @@ function TrendsPanel({ d }: { d: AnalyticsData }) {
           <LineAreaChart
             height={130}
             labels={t.forecast.labels}
-            maxLabels={5}
+            maxLabels={4}
             series={[
               { name: "Calls (actual)", color: NEON.violet, values: [...t.forecast.actual, ...new Array<null>(6).fill(null)] },
               { name: "Planned follow-ups", color: NEON.cyan, dashed: true, values: [...new Array<null>(6).fill(null), ...t.forecast.planned] },

@@ -190,7 +190,7 @@ export function LineAreaChart({
       </svg>
       {hover !== null && (
         <div
-          className="pointer-events-none absolute top-1 z-10 rounded-md border nt-b2 bg-[#150c33]/95 px-2 py-1 text-[10px] leading-tight shadow-lg"
+          className="pointer-events-none absolute top-1 z-10 rounded-md border nt-tooltip px-2 py-1 text-[10px] leading-tight shadow-lg"
           style={{ left: `${Math.min(78, Math.max(2, (x(hover) / W) * 100 - 10))}%` }}
         >
           <div className="mb-0.5 font-semibold nt-2">{labels[hover]}</div>
@@ -232,7 +232,6 @@ export function BarChart({
   height = 120,
   yFormat = (v: number) => String(Math.round(v)),
   maxLabels = 6,
-  unit = "",
   onSelect,
 }: {
   labels: string[];
@@ -240,7 +239,6 @@ export function BarChart({
   height?: number;
   yFormat?: (v: number) => string;
   maxLabels?: number;
-  unit?: string;
   onSelect?: (index: number) => void;
 }) {
   const uid = useId().replace(/:/g, "");
@@ -308,12 +306,12 @@ export function BarChart({
         })}
       </svg>
       {hover !== null && (
-        <div className="pointer-events-none absolute right-1 top-0 z-10 rounded-md border nt-b2 bg-[#150c33]/95 px-2 py-1 text-[10px] leading-tight">
+        <div className="pointer-events-none absolute right-1 top-0 z-10 rounded-md border nt-tooltip px-2 py-1 text-[10px] leading-tight">
           <div className="font-semibold nt-2">{labels[hover]}</div>
           {series.map((s) => (
             <div key={s.name} className="nt-1">
               <span className="mr-1 inline-block h-1.5 w-1.5 rounded-full" style={{ background: s.color }} />
-              {s.name}: <b>{yFormat(s.values[hover] ?? 0)}{unit}</b>
+              {s.name}: <b>{yFormat(s.values[hover] ?? 0)}</b>
             </div>
           ))}
         </div>
